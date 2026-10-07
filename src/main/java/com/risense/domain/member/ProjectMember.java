@@ -1,7 +1,7 @@
 package com.risense.domain.member;
 
-import com.risense.domain.account.Account;
 import com.risense.domain.project.Project;
+import com.risense.domain.user.User;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import lombok.AccessLevel;
@@ -9,16 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * 프로젝트 멤버십. 역할/가입상태가 여기에 있어
- * 한 계정이 프로젝트마다 다른 역할을 가질 수 있다.
- * 탈퇴/내보내기 후에도 행은 보존(기록에 '탈퇴한 팀원' 표시).
- */
 @Entity
-@Table(
-    name = "project_member",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"project_id", "account_id"})
-)
+@Table(name = "project_members", uniqueConstraints = {@UniqueConstraint(name = "uk_project_members", columnNames = {"project_id", "user_id"})})
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -26,30 +18,31 @@ public class ProjectMember {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "project_id")
+    @JoinColumn(name = "project_id", nullable = false, foreignKey = @ForeignKey(name = "fk_members_project"))
     private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "account_id")
-    private Account account;
+    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_members_user"))
+    private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "role", nullable = false, length = 20)
     private MemberRole role;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private MemberStatus status;
+    @Column(name = "join_status", nullable = false, length = 20)
+    private MemberStatus joinStatus;
 
-    @Column(name = "requested_at")
+    @Column(name = "requested_at", nullable = false)
     private OffsetDateTime requestedAt;
 
-    @Column(name = "joined_at")
+    @Column(name = "joined_at", nullable = true)
     private OffsetDateTime joinedAt;
 
-    @Column(name = "left_at")
-    private OffsetDateTime leftAt;
+    @Column(name = "removed_at", nullable = true)
+    private OffsetDateTime removedAt;
 }

@@ -1,17 +1,17 @@
 package com.risense.domain.project;
 
-import com.risense.domain.account.Account;
+import com.risense.domain.user.User;
 import jakarta.persistence.*;
+import java.time.OffsetDateTime;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.OffsetDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "project")
+@Table(name = "projects")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -19,40 +19,38 @@ public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
-    /** 최초 생성자 = 팀장 */
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "created_by")
-    private Account createdBy;
+    @Column(name = "title", nullable = false, length = 100)
+    private String title;
 
-    @Column(nullable = false, length = 200)
-    private String name;
+    @Column(name = "class_name", nullable = true, length = 100)
+    private String className;
 
-    @Column(name = "course_name", length = 200)
-    private String courseName;
+    @Column(name = "deadline", nullable = false)
+    private LocalDate deadline;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "project_type", nullable = false, length = 30)
-    private ProjectType projectType;
+    @Column(name = "checkin_time", nullable = false, columnDefinition = "time(6)")
+    private LocalTime checkinTime;
 
-    @Column(name = "final_deadline")
-    private LocalDate finalDeadline;
-
-    /** 체크인 주기 1~7 */
     @Column(name = "checkin_frequency", nullable = false)
-    private short checkinFrequency = 3;
-
-    @Column(name = "checkin_deadline_time", nullable = false)
-    private LocalTime checkinDeadlineTime = LocalTime.of(23, 59);
+    private Integer checkinFrequency;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private ProjectStatus status = ProjectStatus.ACTIVE;
+    @Column(name = "status", nullable = false, length = 20)
+    private ProjectStatus status;
 
-    @Column(name = "completed_at")
-    private OffsetDateTime completedAt;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "created_by", nullable = false, foreignKey = @ForeignKey(name = "fk_projects_user"))
+    private User createdBy;
+
+    @Column(name = "closed_at", nullable = true)
+    private OffsetDateTime closedAt;
 
     @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    private OffsetDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private OffsetDateTime updatedAt;
 }

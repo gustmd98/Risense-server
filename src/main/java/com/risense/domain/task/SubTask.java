@@ -2,15 +2,13 @@ package com.risense.domain.task;
 
 import com.risense.domain.member.ProjectMember;
 import jakarta.persistence.*;
-import java.time.OffsetDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** 하위 작업. 작성자(담당 팀원)만, 또는 팀장이 수정/삭제 */
 @Entity
-@Table(name = "sub_task")
+@Table(name = "sub_tasks")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -18,22 +16,23 @@ public class SubTask {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "task_id")
+    @JoinColumn(name = "task_id", nullable = false, foreignKey = @ForeignKey(name = "fk_subtasks_task"))
     private Task task;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "created_by")
-    private ProjectMember createdBy;
-
-    @Column(nullable = false, length = 300)
+    @Column(name = "title", nullable = false, length = 100)
     private String title;
 
-    @Column(name = "is_done", nullable = false)
-    private boolean done = false;
+    @Column(name = "completed", nullable = false)
+    private Boolean completed;
 
-    @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "assignee_member_id", nullable = true, foreignKey = @ForeignKey(name = "fk_subtasks_member"))
+    private ProjectMember assigneeMember;
+
+    @Column(name = "sort_order", nullable = false)
+    private Integer sortOrder;
 }

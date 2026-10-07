@@ -1,5 +1,6 @@
 package com.risense.domain.invite;
 
+import com.risense.domain.member.ProjectMember;
 import com.risense.domain.project.Project;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
@@ -8,9 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** 재생성 시 기존 링크는 is_active=false 로 비활성화 */
 @Entity
-@Table(name = "invite_link")
+@Table(name = "invite_links", uniqueConstraints = {@UniqueConstraint(name = "uk_invite_links_token", columnNames = {"token"})})
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -18,21 +18,26 @@ public class InviteLink {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "project_id")
+    @JoinColumn(name = "project_id", nullable = false, foreignKey = @ForeignKey(name = "fk_invite_project"))
     private Project project;
 
-    @Column(nullable = false, unique = true, length = 64)
+    @Column(name = "token", nullable = false, length = 64)
     private String token;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "created_by", nullable = false, foreignKey = @ForeignKey(name = "fk_invite_member"))
+    private ProjectMember createdBy;
+
+    @Column(name = "expires_at", nullable = true)
+    private OffsetDateTime expiresAt;
+
     @Column(name = "is_active", nullable = false)
-    private boolean active = true;
+    private Boolean isActive;
 
     @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
-
-    @Column(name = "deactivated_at")
-    private OffsetDateTime deactivatedAt;
+    private OffsetDateTime createdAt;
 }

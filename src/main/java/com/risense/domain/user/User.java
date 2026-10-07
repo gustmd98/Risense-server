@@ -1,4 +1,4 @@
-package com.risense.domain.account;
+package com.risense.domain.user;
 
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
@@ -8,26 +8,26 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "account")
+@Table(name = "users", uniqueConstraints = {@UniqueConstraint(name = "uk_users_email", columnNames = {"email"})})
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Account {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "email", nullable = false, length = 255)
     private String email;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
-    /** 닉네임은 계정 기준으로 통일, 프로젝트별 변경 없음 */
-    @Column(nullable = false, length = 100)
+    @Column(name = "nickname", nullable = false, length = 50)
     private String nickname;
 
     @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt = OffsetDateTime.now();
+    private OffsetDateTime createdAt;
 }

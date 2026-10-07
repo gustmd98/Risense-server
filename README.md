@@ -1,86 +1,37 @@
-# 팀플 리스크 레이더 (Teamplay Risk Radar)
+# Risense — 팀플 리스크 레이더
 
-대학생 팀 프로젝트의 위험 신호(체크인 누락·일정 지연·미배정 작업·역할 편중·병목·산출물 근거 부족)를
-팀장이 조기에 확인하도록 돕는 웹 서비스의 백엔드.
+Java 21 · Spring Boot 4.0.6 · PostgreSQL/Supabase · Flyway · JPA.
 
-## 스택
+현재 진행 단계는 **백엔드 A의 DB·엔티티 정리**다.
+회원가입/로그인, 프로젝트·팀 권한, 작업 CRUD API는 이후 순차적으로 구현한다.
 
-- Java 21 (LTS)
-- Spring Boot 4.0.6 (Web, Data JPA, Validation)
-- PostgreSQL 16
-- Flyway (스키마 마이그레이션)
-- Gradle (wrapper 포함)
-- Lombok
+## 데이터 모델
 
-## 빠른 시작 (로컬)
+최신 ERD 중 A 영역 11개 테이블을 PostgreSQL과 JPA에 맞췄다.
+현재 담당자는 `task_assignees`, 담당자 변경 기록은 `task_assignee_histories`에 보관한다.
+프로젝트 체크인 요일은 `project_checkin_days`에 저장한다.
+기존 B 체크인 3개 테이블은 참조하는 A 테이블명만 변경해 유지했다.
+B의 체크인 판정·배치·리스크·집계 기능은 별도 담당 범위다.
 
-```bash
-# 1) Postgres 띄우기
-docker compose up -d db
+자세한 변경 범위, 검증 상태, B와의 경계는 [1단계 안내](docs/backend-a-step1.md)를 확인한다.
+참고용 A ERD는 `docs/backend-a-erd.mysql.sql`, 실행용 PostgreSQL SQL은
+`src/main/resources/db/migration/V1__init.sql`이다.
 
-# 2) 앱 실행 (Flyway가 V1 마이그레이션 자동 적용)
-./gradlew bootRun
+## 실행
 
-# 3) 헬스체크
-curl http://localhost:8080/api/health   # {"status":"UP"}
+Java 21과 `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` 환경변수가 필요하다.
+Supabase Session Pooler에서 확인한 PostgreSQL JDBC 주소 및 자격증명을
+IntelliJ 실행 환경에 설정한다. 비밀번호를 코드나 Git에 넣지 않는다.
+`PORT`는 선택이며 기본 8080이다. CORS는 `CORS_ALLOWED_ORIGINS`로 설정한다.
+
+```powershell
+.\gradlew.bat clean build
+.\gradlew.bat bootRun
 ```
 
-기본 접속정보(로컬): db `riskradar` / user `riskradar` / pw `riskradar`, 포트 `5432`.
-운영 환경에서는 환경변수로 덮어쓴다: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `PORT`.
+앱 시작 시 Flyway가 스키마를 적용하고 Hibernate `ddl-auto=validate`가 검증한다.
+`GET /api/health`로 앱 실행 상태를 확인한다.
+V1은 아직 예전 V1이 적용되지 않은 빈 개발 DB를 기준으로 교체했다.
+이미 적용된 DB에는 덮어 적용하지 않으며 이후 변경은 V2부터 추가한다.
 
-## 스키마 / 마이그레이션
-
-- 스키마의 주인은 **Flyway** (`src/main/resources/db/migration/V1__init.sql`).
-- JPA는 `ddl-auto: validate` 로 엔티티와 스키마 일치만 검증한다.
-- 변경 시 `V2__xxx.sql` 처럼 새 마이그레이션을 추가 (기존 파일 수정 금지).
-
-### 핵심 설계
-
-- **역할/가입상태는 `project_member`에** — 한 계정이 프로젝트마다 다른 역할 가능.
-- **하드 삭제 없음** — 상태/소프트 플래그로만 관리.
-  - `task_assignee.is_active=false` 행은 담당 변경 이력으로 보존.
-  - 멤버 탈퇴/내보내기 후에도 `project_member` 행 보존 → 기록에 "탈퇴한 팀원" 표시.
-- **체크인 3단 구조** — `checkin_round` → `checkin_submission` → `checkin_task_update`.
-  - 누락 = 해당 회차에 submission 행이 없는 상태. 연속 누락/회차 이력 계산 용이.
-- **진행률은 계산값** — 하위작업 완료율 + 체크인 평균 보정. `task.display_progress`는 캐시(선택).
-- **미배정 = active 담당자가 없는 작업.** 별도 플래그 불필요.
-- **리스크 점수는 엔티티가 아님** — 런타임 계산.
-
-## 프로젝트 구조
-
-```
-src/main/java/com/teamplay/riskradar/
-├── RiskRadarApplication.java
-├── api/                 # 컨트롤러 (현재 헬스체크만)
-└── domain/
-    ├── account/         # Account
-    ├── project/         # Project, ProjectStatus, ProjectType
-    ├── member/          # ProjectMember, MemberRole, MemberStatus
-    ├── invite/          # InviteLink
-    ├── task/            # Task, TaskAssignee, TaskDependency, SubTask, TaskStatus, TaskSize
-    ├── checkin/         # CheckinSchedule, CheckinRound, CheckinSubmission,
-    │                    #   CheckinTaskUpdate, CheckinDay, BlockedReason
-    └── output/          # OutputLink, OutputType
-src/main/resources/
-├── application.yml
-└── db/migration/V1__init.sql
-```
-
-## 배포
-
-`Dockerfile`(멀티스테이지)이 포함되어 있어 컨테이너 기반 PaaS(Railway/Render/Fly.io 등) 어디든 올릴 수 있다.
-필요 환경변수: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `PORT`.
-
-## 현재 범위 / 다음 단계
-
-이 레포는 **데이터 모델(엔티티 + 마이그레이션) + 실행 가능한 골격**까지다.
-다음 작업: Repository → Service → Controller(REST API) → 인증/인가 → 리스크 계산 로직.
-```
-
-## 깃허브 올리기
-
-```bash
-git remote add origin https://github.com/<your-id>/teamplay-risk-radar.git
-git branch -M main
-git push -u origin main
-```
+Docker 배포 방식은 팀 협의 대기 중이다. 기존 배포 파일은 이번 단계에서 변경하지 않았다.
