@@ -2,8 +2,9 @@
 
 Java 21 · Spring Boot 4.0.6 · PostgreSQL/Supabase · Flyway · JPA.
 
-현재 진행 단계는 **백엔드 A의 DB·엔티티 정리**다.
-회원가입/로그인, 프로젝트·팀 권한, 작업 CRUD API는 이후 순차적으로 구현한다.
+백엔드 A의 DB·엔티티 정리와 회원가입·로그인·Bearer JWT 인증을 구현했다.
+프로젝트·팀 권한, 작업 CRUD API는 이후 순차적으로 구현한다.
+인증 API와 실행 설정은 [인증 안내](docs/backend-a-auth.md)를 확인한다.
 
 ## 데이터 모델
 
@@ -19,7 +20,7 @@ B의 체크인 판정·배치·리스크·집계 기능은 별도 담당 범위�
 
 ## 실행
 
-Java 21과 `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` 환경변수가 필요하다.
+Java 21과 `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` 환경변수가 필요하다.
 Supabase Session Pooler에서 확인한 PostgreSQL JDBC 주소 및 자격증명을
 IntelliJ 실행 환경에 설정한다. 비밀번호를 코드나 Git에 넣지 않는다.
 `PORT`는 선택이며 기본 8080이다. CORS는 `CORS_ALLOWED_ORIGINS`로 설정한다.
