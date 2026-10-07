@@ -1,13 +1,14 @@
 spring:
   application:
-    name: teamplay-risk-radar
+    name: risense-server
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/riskradar}
-    username: ${DB_USERNAME:riskradar}
-    password: ${DB_PASSWORD:riskradar}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: validate          # Flyway가 스키마 주인, JPA는 검증만
+      ddl-auto: validate
+    defer-datasource-initialization: false
     open-in-view: false
     properties:
       hibernate:
@@ -18,3 +19,7 @@ spring:
 
 server:
   port: ${PORT:8080}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
