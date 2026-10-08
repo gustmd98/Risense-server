@@ -22,4 +22,9 @@ public class OpenApiConfig {
     GroupedOpenApi authApi() {
         return GroupedOpenApi.builder().group("auth").pathsToMatch("/api/auth/**").build();
     }
+
+    @Bean
+    GroupedOpenApi projectApi() {
+        return GroupedOpenApi.builder().group("projects").pathsToMatch("/api/projects/**").build();
+    }
 }

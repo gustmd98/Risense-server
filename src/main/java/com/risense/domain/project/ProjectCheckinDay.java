@@ -13,6 +13,13 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProjectCheckinDay {
 
+    public static ProjectCheckinDay of(Project project, CheckinDay day) {
+        ProjectCheckinDay schedule = new ProjectCheckinDay();
+        schedule.project = project;
+        schedule.id = new ProjectCheckinDayId(project.getId(), day);
+        return schedule;
+    }
+
     @EmbeddedId
     private ProjectCheckinDayId id;
 
