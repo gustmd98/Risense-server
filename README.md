@@ -36,3 +36,8 @@ V1은 아직 예전 V1이 적용되지 않은 빈 개발 DB를 기준으로 교�
 이미 적용된 DB에는 덮어 적용하지 않으며 이후 변경은 V2부터 추가한다.
 
 Docker 배포 방식은 팀 협의 대기 중이다. 기존 배포 파일은 이번 단계에서 변경하지 않았다.
+
+## Swagger 인증 명세
+
+앱 실행 후 http://localhost:8080/swagger-ui/index.html 에서 확인한다.
+인증 명세 JSON은 /v3/api-docs/auth 이며 전달 방법은 docs/auth-swagger.md를 참고한다.
