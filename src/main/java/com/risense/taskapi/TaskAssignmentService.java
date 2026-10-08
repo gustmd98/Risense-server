@@ -17,12 +17,14 @@ public class TaskAssignmentService {
     private final TaskAssigneeRepository assignments;
     private final TaskAssigneeHistoryRepository histories;
     private final ProjectMemberRepository members;
+    private final SubTaskRepository children;
 
     public TaskAssignmentService(TaskAssigneeRepository assignments, TaskAssigneeHistoryRepository histories,
-            ProjectMemberRepository members) {
+            ProjectMemberRepository members, SubTaskRepository children) {
         this.assignments = assignments;
         this.histories = histories;
         this.members = members;
+        this.children = children;
     }
 
     public boolean replace(Task task, List<Long> memberIds, ProjectMember actor, OffsetDateTime now) {
@@ -62,6 +64,10 @@ public class TaskAssignmentService {
     }
 
     public void removeMember(ProjectMember member, ProjectMember actor, OffsetDateTime now) {
+        for (var child : children.findForMember(member.getId())) {
+            child.setAssigneeMember(null);
+            child.getTask().setUpdatedAt(now);
+        }
         List<TaskAssigneeHistory> events = new ArrayList<>();
         for (var assignment : assignments.findForMember(member.getId())) {
             Task task = assignment.getTask();

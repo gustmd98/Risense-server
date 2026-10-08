@@ -13,6 +13,14 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TaskPrerequisite {
 
+    public static TaskPrerequisite of(Task task, Task prerequisite) {
+        TaskPrerequisite relation = new TaskPrerequisite();
+        relation.task = task;
+        relation.prerequisiteTask = prerequisite;
+        relation.id = new TaskPrerequisiteId(task.getId(), prerequisite.getId());
+        return relation;
+    }
+
     @EmbeddedId
     private TaskPrerequisiteId id;
 

@@ -18,7 +18,8 @@ class TaskAssignmentServiceTest {
     private final TaskAssigneeRepository assignments = mock(TaskAssigneeRepository.class);
     private final TaskAssigneeHistoryRepository histories = mock(TaskAssigneeHistoryRepository.class);
     private final ProjectMemberRepository members = mock(ProjectMemberRepository.class);
-    private final TaskAssignmentService service = new TaskAssignmentService(assignments, histories, members);
+    private final SubTaskRepository children = mock(SubTaskRepository.class);
+    private final TaskAssignmentService service = new TaskAssignmentService(assignments, histories, members, children);
     private final OffsetDateTime now = OffsetDateTime.parse("2026-10-08T00:00:00Z");
     private Task task;
     private ProjectMember actor, member, other;
@@ -91,6 +92,8 @@ class TaskAssignmentServiceTest {
     }
 
     @Test void removingMemberUnassignsWorkAndRecordsRemovingActor() {
+        var child = SubTask.create(task, "하위 작업", member, 0);
+        when(children.findForMember(2L)).thenReturn(List.of(child));
         var existing = TaskAssignee.assign(task, member, now.minusDays(1));
         when(assignments.findForMember(2L)).thenReturn(List.of(existing));
         service.removeMember(member, actor, now);
@@ -100,5 +103,6 @@ class TaskAssignmentServiceTest {
             return event.getAction() == AssigneeAction.UNASSIGN && event.getChangedBy() == actor && event.getMember() == member;
         }));
         assertThat(task.getUpdatedAt()).isEqualTo(now);
+        assertThat(child.getAssigneeMember()).isNull();
     }
 }

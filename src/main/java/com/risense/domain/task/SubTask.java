@@ -14,6 +14,16 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SubTask {
 
+    public static SubTask create(Task task, String title, ProjectMember assignee, int order) {
+        SubTask subTask = new SubTask();
+        subTask.task = task;
+        subTask.title = title;
+        subTask.assigneeMember = assignee;
+        subTask.sortOrder = order;
+        subTask.completed = false;
+        return subTask;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
