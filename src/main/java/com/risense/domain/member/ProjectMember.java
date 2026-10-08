@@ -16,6 +16,34 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProjectMember {
 
+    public static ProjectMember request(Project project, User user, OffsetDateTime now) {
+        ProjectMember member = new ProjectMember();
+        member.project = project;
+        member.user = user;
+        member.request(now);
+        return member;
+    }
+
+    public void request(OffsetDateTime now) {
+        role = MemberRole.MEMBER;
+        joinStatus = MemberStatus.PENDING;
+        requestedAt = now;
+        joinedAt = null;
+        removedAt = null;
+    }
+
+    public void approve(OffsetDateTime now) {
+        joinStatus = MemberStatus.APPROVED;
+        joinedAt = now;
+    }
+
+    public void reject() { joinStatus = MemberStatus.REJECTED; }
+
+    public void remove(OffsetDateTime now) {
+        joinStatus = MemberStatus.REMOVED;
+        removedAt = now;
+    }
+
     public static ProjectMember leader(Project project, User user, OffsetDateTime now) {
         ProjectMember member = new ProjectMember();
         member.project = project;
