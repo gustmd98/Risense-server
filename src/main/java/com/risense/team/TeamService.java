@@ -6,6 +6,7 @@ import com.risense.domain.member.*;
 import com.risense.domain.project.*;
 import com.risense.domain.user.UserRepository;
 import com.risense.project.ProjectAccess;
+import com.risense.taskapi.TaskAssignmentService;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -22,15 +23,17 @@ public class TeamService {
     private final InviteLinkRepository invites;
     private final UserRepository users;
     private final Clock clock;
+    private final TaskAssignmentService assignments;
     private final SecureRandom random = new SecureRandom();
 
     public TeamService(ProjectAccess access, ProjectMemberRepository members, InviteLinkRepository invites,
-            UserRepository users, Clock clock) {
+            UserRepository users, Clock clock, TaskAssignmentService assignments) {
         this.access = access;
         this.members = members;
         this.invites = invites;
         this.users = users;
         this.clock = clock;
+        this.assignments = assignments;
     }
 
     @Transactional
@@ -160,7 +163,9 @@ public class TeamService {
         if (member.getJoinStatus() == MemberStatus.REMOVED) return MemberResponse.from(member);
         requireStatus(member, MemberStatus.APPROVED);
         protectLastLeader(projectId, member);
-        member.remove(now());
+        var now = now();
+        assignments.removeMember(member, actor, now);
+        member.remove(now);
         invites.findByCreatedBy_IdAndIsActiveTrue(memberId).forEach(InviteLink::revoke);
         return MemberResponse.from(member);
     }

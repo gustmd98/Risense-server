@@ -15,6 +15,17 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TaskAssigneeHistory {
 
+    public static TaskAssigneeHistory record(Task task, ProjectMember member, AssigneeAction action,
+            ProjectMember actor, OffsetDateTime now) {
+        TaskAssigneeHistory history = new TaskAssigneeHistory();
+        history.task = task;
+        history.member = member;
+        history.action = action;
+        history.changedBy = actor;
+        history.changedAt = now;
+        return history;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
