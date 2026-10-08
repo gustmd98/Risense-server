@@ -17,6 +17,21 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Project {
 
+    public static Project create(User creator, OffsetDateTime now) {
+        Project project = new Project();
+        project.createdBy = creator;
+        project.status = ProjectStatus.IN_PROGRESS;
+        project.createdAt = now;
+        project.updatedAt = now;
+        return project;
+    }
+
+    public void close(OffsetDateTime now) {
+        status = ProjectStatus.CLOSED;
+        closedAt = now;
+        updatedAt = now;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

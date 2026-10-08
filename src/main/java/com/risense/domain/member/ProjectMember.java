@@ -16,6 +16,17 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProjectMember {
 
+    public static ProjectMember leader(Project project, User user, OffsetDateTime now) {
+        ProjectMember member = new ProjectMember();
+        member.project = project;
+        member.user = user;
+        member.role = MemberRole.LEADER;
+        member.joinStatus = MemberStatus.APPROVED;
+        member.requestedAt = now;
+        member.joinedAt = now;
+        return member;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
