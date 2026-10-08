@@ -15,6 +15,16 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TaskArtifact {
 
+    public static TaskArtifact create(Task task, String title, String url, ProjectMember creator, OffsetDateTime now) {
+        TaskArtifact artifact = new TaskArtifact();
+        artifact.task = task;
+        artifact.title = title;
+        artifact.url = url;
+        artifact.createdBy = creator;
+        artifact.createdAt = now;
+        return artifact;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
