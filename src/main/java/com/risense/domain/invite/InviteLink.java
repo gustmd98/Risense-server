@@ -16,6 +16,20 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InviteLink {
 
+    public static InviteLink issue(Project project, ProjectMember creator, String token,
+            OffsetDateTime now, OffsetDateTime expiresAt) {
+        InviteLink link = new InviteLink();
+        link.project = project;
+        link.createdBy = creator;
+        link.token = token;
+        link.createdAt = now;
+        link.expiresAt = expiresAt;
+        link.isActive = true;
+        return link;
+    }
+
+    public void revoke() { isActive = false; }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

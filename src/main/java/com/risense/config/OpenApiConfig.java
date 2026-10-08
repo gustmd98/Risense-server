@@ -25,6 +25,15 @@ public class OpenApiConfig {
 
     @Bean
     GroupedOpenApi projectApi() {
-        return GroupedOpenApi.builder().group("projects").pathsToMatch("/api/projects/**").build();
+        return GroupedOpenApi.builder().group("projects").pathsToMatch("/api/projects/**")
+                .pathsToExclude("/api/projects/*/members/**", "/api/projects/*/membership",
+                        "/api/projects/*/join-requests", "/api/projects/*/invite-links/**").build();
+    }
+
+    @Bean
+    GroupedOpenApi teamApi() {
+        return GroupedOpenApi.builder().group("team").pathsToMatch("/api/invites/**",
+                "/api/projects/*/members/**", "/api/projects/*/membership",
+                "/api/projects/*/join-requests", "/api/projects/*/invite-links/**").build();
     }
 }
