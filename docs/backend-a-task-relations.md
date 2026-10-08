@@ -1,6 +1,6 @@
 # 선행 작업·하위 작업·산출물
 
-Swagger tasks 그룹, JSON `/v3/api-docs/tasks`에 기존 작업 API와 함께 노출한다.
+Swagger의 작업 관리 항목, JSON `/v3/api-docs`에 기존 작업 API와 함께 노출한다.
 기본 경로는 `/api/projects/{projectId}/tasks/{taskId}`이며 Bearer JWT가 필요하다.
 모든 조회는 승인된 팀원만 가능하다.
 

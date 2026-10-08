@@ -1,6 +1,6 @@
 # 작업 CRUD 및 담당자 API
 
-Swagger tasks 그룹, OpenAPI JSON `/v3/api-docs/tasks`.
+Swagger의 작업 관리 항목, OpenAPI JSON `/v3/api-docs`.
 모든 API는 Bearer JWT 필요. 승인된 팀원은 조회 가능하며,
 생성·설정 변경·취소·담당자 변경은 팀장·공동 팀장만 가능하다.
 
@@ -53,7 +53,7 @@ ASSIGN/UNASSIGN 이력에는 대상 멤버, 변경자 멤버, 변경 시간이 �
 배정·해제와 이력 저장은 원자적이며, 내보내기도 동일 프로젝트 잠금을 사용한다.
 목록은 담당자를 일괄 조회하여 작업마다 별도 쿼리하지 않는다.
 선행 작업·하위 작업·산출물은 backend-a-task-relations.md를 참고한다.
-템플릿은 후속 PR에서 구현한다.
+템플릿 목록 및 일괄 생성은 `backend-a-task-template.md`를 참고한다.
 
 ## 오류
 

@@ -1,6 +1,6 @@
 # 프로젝트 API
 
-Swagger의 projects 그룹 또는 `/v3/api-docs/projects`에서 확인한다.
+Swagger의 프로젝트 관리 항목 또는 `/v3/api-docs`에서 확인한다.
 모든 프로젝트 API는 Bearer JWT가 필요하다.
 
 | 메서드 | 경로 | 접근 | 결과 |
