@@ -1,15 +1,21 @@
 services:
-  db:
-    image: postgres:16
-    container_name: riskradar-db
+  app:
+    image: ${DOCKER_IMAGE:?Set DOCKER_IMAGE in .env}:${IMAGE_TAG:-latest}
+    container_name: risense-server
+    restart: unless-stopped
+    mem_limit: 640m
     environment:
-      POSTGRES_DB: riskradar
-      POSTGRES_USER: riskradar
-      POSTGRES_PASSWORD: riskradar
+      DB_URL: ${DB_URL:?Set DB_URL in .env}
+      DB_USERNAME: ${DB_USERNAME:?Set DB_USERNAME in .env}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?Set CORS_ALLOWED_ORIGINS in .env}
+      PORT: '8080'
+      JAVA_TOOL_OPTIONS: '-XX:MaxRAMPercentage=60.0 -XX:+ExitOnOutOfMemoryError'
     ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
+      - '8080:8080'
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
