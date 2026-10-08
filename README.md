@@ -2,42 +2,109 @@
 
 Java 21 · Spring Boot 4.0.6 · PostgreSQL/Supabase · Flyway · JPA.
 
-백엔드 A의 DB·엔티티 정리와 회원가입·로그인·Bearer JWT 인증을 구현했다.
-프로젝트·팀 권한, 작업 CRUD API는 이후 순차적으로 구현한다.
-인증 API와 실행 설정은 [인증 안내](docs/backend-a-auth.md)를 확인한다.
+## 구현 현황
 
-## 데이터 모델
+백엔드 A의 계정·프로젝트·팀·작업 관리 API가 구현되어 있다.
 
-최신 ERD 중 A 영역 11개 테이블을 PostgreSQL과 JPA에 맞췄다.
-현재 담당자는 `task_assignees`, 담당자 변경 기록은 `task_assignee_histories`에 보관한다.
-프로젝트 체크인 요일은 `project_checkin_days`에 저장한다.
-기존 B 체크인 3개 테이블은 참조하는 A 테이블명만 변경해 유지했다.
-B의 체크인 판정·배치·리스크·집계 기능은 별도 담당 범위다.
+| 영역 | 구현 내용 | 상세 안내 |
+| --- | --- | --- |
+| 인증 | 회원가입, 로그인, 내 정보 조회, Bearer JWT 인증 | [인증](docs/backend-a-auth.md) |
+| 프로젝트 | 생성·목록·상세·설정 수정, 종료 및 종료 후 쓰기 차단 | [프로젝트](docs/backend-a-project.md) |
+| 팀 | 초대 링크 발급·조회·폐기, 가입 요청·승인·거절, 역할 변경·내보내기, 권한 검사 | [팀](docs/backend-a-team.md) |
+| 작업 | 생성·조회·수정·취소, 담당자 설정 및 변경 이력 | [작업](docs/backend-a-task.md) |
+| 작업 관계 | 선행 작업 설정, 하위 작업 CRUD·완료 변경, 산출물 링크 CRUD | [작업 관계](docs/backend-a-task-relations.md) |
+| 템플릿 | 템플릿 조회 및 템플릿 기반 작업 일괄 생성 | [템플릿](docs/backend-a-task-template.md) |
 
-자세한 변경 범위, 검증 상태, B와의 경계는 [1단계 안내](docs/backend-a-step1.md)를 확인한다.
-참고용 A ERD는 `docs/backend-a-erd.mysql.sql`, 실행용 PostgreSQL SQL은
-`src/main/resources/db/migration/V1__init.sql`이다.
+백엔드 B의 체크인 회차·대상 관리, 제출·수정·기록 조회, 자동 판정·집계는 후속 구현 범위다.
+현재 하위 작업 완료 변경 API는 부모 작업의 진행률·수행 상태를 자동 갱신하지 않는다.
+체크인 테이블의 존재가 체크인 기능 구현 완료를 의미하지는 않는다.
+리스크 계산은 정책 확정 후 별도로 진행한다.
 
-## 실행
+## 로컬 개발 환경
 
-Java 21과 `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` 환경변수가 필요하다.
-Supabase Session Pooler에서 확인한 PostgreSQL JDBC 주소 및 자격증명을
-IntelliJ 실행 환경에 설정한다. 비밀번호를 코드나 Git에 넣지 않는다.
-`PORT`는 선택이며 기본 8080이다. CORS는 `CORS_ALLOWED_ORIGINS`로 설정한다.
+### IntelliJ IDEA
+
+1. 저장소를 Clone하고 Gradle 프로젝트로 연다.
+2. 프로젝트 SDK와 Gradle JVM을 Java 21로 설정한다.
+3. Gradle 배포는 저장소의 Wrapper를 사용한다.
+4. `RiskRadarApplication` 실행 구성에 아래 환경변수를 설정한다.
+
+| 변수 | 용도 | 기본값 |
+| --- | --- | --- |
+| `DB_URL` | PostgreSQL JDBC 연결 주소 | 필수 |
+| `DB_USERNAME` | DB 사용자 이름 | 필수 |
+| `DB_PASSWORD` | DB 비밀번호 | 필수 |
+| `JWT_SECRET` | 32바이트 이상 난수를 Base64로 인코딩한 서명 키 | 필수 |
+| `PORT` | 서버 포트 | `8080` |
+| `CORS_ALLOWED_ORIGINS` | 허용할 프론트 Origin | `http://localhost:5173` |
+
+Supabase를 사용할 때는 Session Pooler의 JDBC 주소와 자격증명을 확인한다.
+개발용 DB를 사용하고, 비밀번호와 JWT 키는 Git에 저장하지 않는다.
+IntelliJ 실행 구성은 `Store as project file`을 선택하지 않는다.
+`.env` 파일만 생성해도 IntelliJ나 `bootRun`에 자동으로 적용되는 것은 아니므로,
+IDE 실행 구성 또는 명령을 실행하는 셸 환경에 변수를 제공한다.
+
+### 빌드 및 실행
+
+저장소 루트에서 실행한다. 서버 실행에는 위 환경변수와 접근 가능한 DB가 필요하다.
+
+macOS / Linux:
+
+```sh
+./gradlew clean build
+./gradlew bootRun
+```
+
+Windows PowerShell:
 
 ```powershell
 .\gradlew.bat clean build
 .\gradlew.bat bootRun
 ```
 
-앱 시작 시 Flyway가 스키마를 적용하고 Hibernate `ddl-auto=validate`가 검증한다.
-`GET /api/health`로 앱 실행 상태를 확인한다.
-V1은 아직 예전 V1이 적용되지 않은 빈 개발 DB를 기준으로 교체했다.
-이미 적용된 DB에는 덮어 적용하지 않으며 이후 변경은 V2부터 추가한다.
+앱 시작 시 Flyway가 마이그레이션을 적용하고 Hibernate의 `ddl-auto=validate`가 스키마를 검증한다.
+실행 후 [상태 확인 API](http://localhost:8080/api/health)에서 응답을 확인한다.
 
-Docker 배포 방식은 팀 협의 대기 중이다. 기존 배포 파일은 이번 단계에서 변경하지 않았다.
+## API 문서
 
-## Swagger 인증 명세
+앱 실행 후 다음 주소에서 확인한다.
 
-앱 실행 후 http://localhost:8080/swagger-ui/index.html 에서 확인한다.
-전체 API 명세 JSON은 /v3/api-docs 이며 전달 방법은 docs/auth-swagger.md를 참고한다.
+- [Swagger UI](http://localhost:8080/swagger-ui/index.html)
+- [OpenAPI JSON](http://localhost:8080/v3/api-docs)
+
+로그인으로 받은 `accessToken`을 Swagger의 Authorize에 입력해 인증이 필요한 API를 호출한다.
+요청 헤더 형식은 `Authorization: Bearer <accessToken>`이다.
+명세 전달 방법은 [Swagger 안내](docs/auth-swagger.md)를 참고한다.
+이전에 전달한 인증 전용 JSON보다 실행 중인 서버의 전체 명세를 우선 확인한다.
+
+## 데이터 모델과 마이그레이션
+
+현재 담당자는 `task_assignees`, 담당자 변경 기록은 `task_assignee_histories`,
+프로젝트 체크인 요일은 `project_checkin_days`에 저장한다.
+기존 체크인 관련 테이블은 B 기능 구현 시 확정 규칙과 대조해야 한다.
+
+실행용 PostgreSQL 마이그레이션은 `src/main/resources/db/migration`에 있다.
+
+- `V1__init.sql`: 초기 스키마
+- `V2__unique_normalized_user_email.sql`: 정규화된 이메일의 유일성 인덱스
+
+이미 적용된 V1/V2는 수정하지 않는다. 스키마 변경은 팀과 번호를 조율한 새 마이그레이션으로 추가한다.
+B의 스키마 변경은 ERD 확정 확인 후 진행한다.
+[참고용 MySQL ERD](docs/backend-a-erd.mysql.sql)는 PostgreSQL 서버에 실행하지 않는다.
+초기 모델 정리 배경은 [1단계 안내](docs/backend-a-step1.md)를 참고한다.
+기능별 문서에는 작성 당시의 단계별 설명과 검증 기록이 포함되어 있다.
+
+## Docker 배포
+
+GitHub Actions는 `main` 대상 PR에서 빌드·테스트를 수행한다.
+`main` 푸시 시 빌드·테스트 후 `amd64`/`arm64` 이미지를 Docker Hub에 게시한다.
+이미지 태그는 `latest`와 `sha-<전체 커밋 SHA>`다.
+
+현재 `docker-compose.yml`은 게시된 백엔드 이미지를 실행하며 DB 컨테이너는 포함하지 않는다.
+DB는 외부 PostgreSQL/Supabase에 연결한다.
+Oracle 서버에서 이미지를 가져와 실행하는 절차, 환경변수 및 롤백 방법은
+[배포 안내](docs/deployment.md)와 [.env.example](.env.example)을 참고한다.
+Compose 실행 시에는 `DOCKER_IMAGE`와 `CORS_ALLOWED_ORIGINS`도 반드시 설정한다.
+
+이미지 게시와 실제 서버 배포는 별도 단계이며, 현재 워크플로에는 Oracle 자동 배포 단계가 없다.
+실제 배포 상태와 공개 API 주소는 서버에서 별도로 확인해야 한다.
