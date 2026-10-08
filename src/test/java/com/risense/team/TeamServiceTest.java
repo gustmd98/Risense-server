@@ -10,6 +10,7 @@ import com.risense.domain.member.*;
 import com.risense.domain.project.*;
 import com.risense.domain.user.*;
 import com.risense.project.ProjectAccess;
+import com.risense.taskapi.TaskAssignmentService;
 import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,8 @@ class TeamServiceTest {
     private final UserRepository users = mock(UserRepository.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-08T00:00:00Z"), ZoneOffset.UTC);
     private final ProjectAccess access = new ProjectAccess(projects, members);
-    private final TeamService service = new TeamService(access, members, invites, users, clock);
+    private final TaskAssignmentService assignments = mock(TaskAssignmentService.class);
+    private final TeamService service = new TeamService(access, members, invites, users, clock, assignments);
     private final String token = "a".repeat(64);
     private Project project;
     private ProjectMember actor;
@@ -221,6 +223,7 @@ class TeamServiceTest {
         assertThat(result.removedAt()).isEqualTo(now());
         assertThat(result.joinedAt()).isEqualTo(joinedAt);
         assertThat(issued.getIsActive()).isFalse();
+        verify(assignments).removeMember(target, actor, now());
         verify(members, never()).delete(any());
         assertThat(service.remove(10L, 2L, 1L).removedAt()).isEqualTo(now());
     }

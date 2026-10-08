@@ -16,6 +16,27 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Task {
 
+    public static Task create(Project project, String title, TaskSize size, LocalDate dueDate,
+            int sortOrder, OffsetDateTime now) {
+        Task task = new Task();
+        task.project = project;
+        task.title = title;
+        task.size = size;
+        task.dueDate = dueDate;
+        task.sortOrder = sortOrder;
+        task.status = TaskStatus.TODO;
+        task.progress = 0;
+        task.createdAt = now;
+        task.updatedAt = now;
+        return task;
+    }
+
+    public void cancel(OffsetDateTime now) {
+        status = TaskStatus.CANCELLED;
+        cancelledAt = now;
+        updatedAt = now;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

@@ -15,6 +15,15 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TaskAssignee {
 
+    public static TaskAssignee assign(Task task, ProjectMember member, OffsetDateTime now) {
+        TaskAssignee assignment = new TaskAssignee();
+        assignment.task = task;
+        assignment.member = member;
+        assignment.id = new TaskAssigneeId(task.getId(), member.getId());
+        assignment.assignedAt = now;
+        return assignment;
+    }
+
     @EmbeddedId
     private TaskAssigneeId id;
 
