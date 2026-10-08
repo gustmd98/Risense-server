@@ -40,4 +40,4 @@ Docker 배포 방식은 팀 협의 대기 중이다. 기존 배포 파일은 이
 ## Swagger 인증 명세
 
 앱 실행 후 http://localhost:8080/swagger-ui/index.html 에서 확인한다.
-인증 명세 JSON은 /v3/api-docs/auth 이며 전달 방법은 docs/auth-swagger.md를 참고한다.
+전체 API 명세 JSON은 /v3/api-docs 이며 전달 방법은 docs/auth-swagger.md를 참고한다.

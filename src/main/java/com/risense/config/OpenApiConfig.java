@@ -4,7 +4,6 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityScheme;
-import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,27 +17,4 @@ public class OpenApiConfig {
                         .type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")));
     }
 
-    @Bean
-    GroupedOpenApi authApi() {
-        return GroupedOpenApi.builder().group("auth").pathsToMatch("/api/auth/**").build();
-    }
-
-    @Bean
-    GroupedOpenApi projectApi() {
-        return GroupedOpenApi.builder().group("projects").pathsToMatch("/api/projects/**")
-                .pathsToExclude("/api/projects/*/members/**", "/api/projects/*/membership",
-                        "/api/projects/*/join-requests", "/api/projects/*/invite-links/**", "/api/projects/*/tasks/**").build();
-    }
-
-    @Bean
-    GroupedOpenApi teamApi() {
-        return GroupedOpenApi.builder().group("team").pathsToMatch("/api/invites/**",
-                "/api/projects/*/members/**", "/api/projects/*/membership",
-                "/api/projects/*/join-requests", "/api/projects/*/invite-links/**").build();
-    }
-
-    @Bean
-    GroupedOpenApi taskApi() {
-        return GroupedOpenApi.builder().group("tasks").pathsToMatch("/api/projects/*/tasks/**").build();
-    }
 }

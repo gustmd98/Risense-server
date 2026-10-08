@@ -1,6 +1,6 @@
 # 팀 및 초대 API
 
-Swagger의 team 그룹, JSON `/v3/api-docs/team`에서 확인한다.
+Swagger의 팀 관리 항목, JSON `/v3/api-docs`에서 확인한다.
 초대 링크 검증 GET 한 개를 제외하면 모든 API는 Bearer JWT가 필요하다.
 프로젝트 ID와 멤버 ID는 다르다. 역할 변경·승인·내보내기에는 MemberResponse.id를 사용한다.
 

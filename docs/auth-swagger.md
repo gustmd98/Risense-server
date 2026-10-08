@@ -2,8 +2,8 @@
 
 ## Swagger
 
-앱 실행 후 http://localhost:8080/swagger-ui/index.html 에서 auth 그룹을 선택한다.
-OpenAPI JSON: http://localhost:8080/v3/api-docs/auth
+앱 실행 후 http://localhost:8080/swagger-ui/index.html 에서 전체 API를 확인한다.
+OpenAPI JSON: http://localhost:8080/v3/api-docs
 문서 조회는 토큰 없이 가능하다. /api/auth/me는 Bearer 토큰이 필요하다.
 
 1. POST /api/auth/register로 가입한다. 가입 응답에는 토큰이 없다.
@@ -20,7 +20,7 @@ Refresh token과 서버 로그아웃 API는 없다. 로그아웃 시 클라이�
 Swagger 실행 확인 후 PowerShell에서 명세를 내려받는다:
 
 ```powershell
-Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:8080/v3/api-docs/auth' -OutFile 'auth-openapi.json'
+Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:8080/v3/api-docs' -OutFile 'auth-openapi.json'
 ```
 
 이 파일은 프론트 담당자가 Swagger Editor 등에 불러와 명세를 확인하고 mock API를

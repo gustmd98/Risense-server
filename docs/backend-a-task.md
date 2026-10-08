@@ -1,6 +1,6 @@
 # 작업 CRUD 및 담당자 API
 
-Swagger tasks 그룹, OpenAPI JSON `/v3/api-docs/tasks`.
+Swagger의 작업 관리 항목, OpenAPI JSON `/v3/api-docs`.
 모든 API는 Bearer JWT 필요. 승인된 팀원은 조회 가능하며,
 생성·설정 변경·취소·담당자 변경은 팀장·공동 팀장만 가능하다.
 

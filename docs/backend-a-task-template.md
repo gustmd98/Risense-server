@@ -1,6 +1,6 @@
 # 작업 템플릿 API
 
-JWT Bearer 인증을 사용합니다. 기존 작업 관리 Swagger 그룹에 포함됩니다.
+JWT Bearer 인증을 사용합니다. Swagger 한 페이지에서 다른 API와 함께 확인할 수 있습니다.
 
 ## 목록 조회
 
