@@ -4,6 +4,7 @@ import com.risense.api.error.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -33,6 +34,8 @@ public class TaskRelationController {
 
     @GetMapping("/prerequisites")
     @Operation(summary = "선행 작업 목록", description = "승인된 팀원 전용.")
+    @ApiResponse(responseCode = "200", description = "선행 작업 목록 조회 성공. 없으면 빈 배열을 반환합니다.",
+            content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = RelationResponses.Prerequisite.class))))
     public List<RelationResponses.Prerequisite> prerequisites(@PathVariable("projectId") long projectId,
             @PathVariable("taskId") long taskId, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return relations.prerequisites(projectId, taskId, userId(jwt));
@@ -89,6 +92,8 @@ public class TaskRelationController {
 
     @GetMapping("/artifacts")
     @Operation(summary = "산출물 목록", description = "승인된 팀원 전용. 생성 시간·ID 내림차순.")
+    @ApiResponse(responseCode = "200", description = "산출물 목록 조회 성공. 없으면 빈 배열을 반환합니다.",
+            content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = RelationResponses.Artifact.class))))
     public List<RelationResponses.Artifact> artifacts(@PathVariable("projectId") long projectId,
             @PathVariable("taskId") long taskId, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return relations.artifacts(projectId, taskId, userId(jwt));
