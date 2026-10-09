@@ -137,13 +137,26 @@ class TeamServiceTest {
     }
 
     @Test
-    void rejectedCanReapplyButRemovedCannot() {
+    void rejectedAndRemovedCanReapplyAsPendingMembers() {
         when(members.findByProject_IdAndUser_Id(10L, 2L)).thenReturn(Optional.of(target));
         target.reject();
         assertThat(service.join(token, 2L).joinStatus()).isEqualTo(MemberStatus.PENDING);
         assertThat(target.getRequestedAt()).isEqualTo(now());
-        target.remove(now());
-        error(() -> service.join(token, 2L), HttpStatus.FORBIDDEN, "MEMBER_REMOVED");
+        target.approve(now().minusDays(1));
+        target.setRole(MemberRole.CO_LEADER);
+        target.remove(now().minusHours(1));
+        var id = target.getId();
+        var result = service.join(token, 2L);
+        assertThat(result.id()).isEqualTo(id);
+        assertThat(result.joinStatus()).isEqualTo(MemberStatus.PENDING);
+        assertThat(result.role()).isEqualTo(MemberRole.MEMBER);
+        assertThat(result.requestedAt()).isEqualTo(now());
+        assertThat(result.joinedAt()).isNull();
+        assertThat(result.removedAt()).isNull();
+        verify(members, never()).saveAndFlush(any());
+        verifyNoInteractions(assignments);
+        error(() -> service.list(10L, 2L), HttpStatus.FORBIDDEN, "PROJECT_ACCESS_DENIED");
+        assertThat(service.approve(10L, id, 1L).joinStatus()).isEqualTo(MemberStatus.APPROVED);
     }
 
     @Test

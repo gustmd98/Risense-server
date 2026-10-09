@@ -36,7 +36,7 @@ Swagger의 팀 관리 항목, JSON `/v3/api-docs`에서 확인한다.
 
 - 신규 가입은 MEMBER/PENDING. 승인 전에는 팀원 목록·프로젝트 상세에 접근하지 못한다.
 - PENDING/APPROVED의 반복 가입 요청은 기존 상태·역할·시각을 유지한다.
-- REJECTED는 다시 신청하면 PENDING으로 전환한다. REMOVED는 재신청 불가다.
+- REJECTED·REMOVED 모두 유효한 초대 링크로 다시 신청하면 같은 멤버 ID의 PENDING으로 전환한다. 역할은 MEMBER로 초기화하고 requestedAt을 갱신하며 joinedAt·removedAt은 초기화한다. 재승인이 필요하고 기존 작업 배정은 복구하지 않는다.
 - 승인·거절은 PENDING에서만 가능하다. 같은 결과 재요청은 멱등 처리한다.
 - 역할 변경·내보내기는 APPROVED 대상으로만 가능하다.
 - 마지막 승인된 LEADER는 강등·내보내기 불가다. 본인을 대상으로 해도 동일하다.
@@ -53,7 +53,7 @@ Swagger의 팀 관리 항목, JSON `/v3/api-docs`에서 확인한다.
 
 401 UNAUTHORIZED
 
-403 PROJECT_ACCESS_DENIED / PROJECT_MANAGER_REQUIRED / LEADER_REQUIRED / MEMBER_REMOVED
+403 PROJECT_ACCESS_DENIED / PROJECT_MANAGER_REQUIRED / LEADER_REQUIRED
 
 404 PROJECT_NOT_FOUND / MEMBER_NOT_FOUND / INVITE_NOT_FOUND
 

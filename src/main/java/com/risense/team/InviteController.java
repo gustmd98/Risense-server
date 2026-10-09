@@ -30,11 +30,10 @@ public class InviteController {
     public InvitePreview preview(@PathVariable("token") String token) { return team.preview(token); }
 
     @PostMapping("/{token}/join")
-    @Operation(summary = "가입 요청", description = "로그인 필요. PENDING으로 요청합니다. 대기·승인 상태 재요청은 기존 내역을 반환합니다. 거절 후 재신청 가능, 내보내기 후 재신청 불가.",
+    @Operation(summary = "가입 요청", description = "로그인 필요. PENDING으로 요청합니다. 대기·승인 상태 재요청은 기존 내역을 반환합니다. 거절·내보내기 후에도 유효한 초대 링크로 재신청 가능합니다. 일반 팀원 역할의 승인 대기 상태로 전환되며 팀장 승인이 필요합니다.",
             security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
-            @ApiResponse(responseCode = "401", description = "로그인 필요", content = @Content(schema = @Schema(implementation = ApiError.class))),
-            @ApiResponse(responseCode = "403", description = "MEMBER_REMOVED", content = @Content(schema = @Schema(implementation = ApiError.class)))
+            @ApiResponse(responseCode = "401", description = "로그인 필요", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
     public MemberResponse join(@PathVariable("token") String token,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {

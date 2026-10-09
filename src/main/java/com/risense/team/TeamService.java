@@ -89,10 +89,9 @@ public class TeamService {
         var existing = members.findByProject_IdAndUser_Id(projectId, userId);
         if (existing.isPresent()) {
             var member = existing.get();
-            if (member.getJoinStatus() == MemberStatus.REMOVED) {
-                throw error(HttpStatus.FORBIDDEN, "MEMBER_REMOVED", "내보내진 프로젝트에는 다시 가입 요청할 수 없습니다.");
+            if (member.getJoinStatus() == MemberStatus.REJECTED || member.getJoinStatus() == MemberStatus.REMOVED) {
+                member.request(now());
             }
-            if (member.getJoinStatus() == MemberStatus.REJECTED) member.request(now());
             return MemberResponse.from(member); // PENDING/APPROVED retries preserve state and timestamps.
         }
         return MemberResponse.from(members.saveAndFlush(ProjectMember.request(project, user, now())));
