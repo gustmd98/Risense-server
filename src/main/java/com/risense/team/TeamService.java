@@ -1,5 +1,7 @@
 package com.risense.team;
 
+import com.risense.checkin.CheckinLifecycle;
+
 import com.risense.api.error.ApiException;
 import com.risense.domain.invite.*;
 import com.risense.domain.member.*;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TeamService {
+    private final CheckinLifecycle checkins;
     private final ProjectAccess access;
     private final ProjectMemberRepository members;
     private final InviteLinkRepository invites;
@@ -27,7 +30,8 @@ public class TeamService {
     private final SecureRandom random = new SecureRandom();
 
     public TeamService(ProjectAccess access, ProjectMemberRepository members, InviteLinkRepository invites,
-            UserRepository users, Clock clock, TaskAssignmentService assignments) {
+            UserRepository users, Clock clock, TaskAssignmentService assignments, CheckinLifecycle checkins) {
+        this.checkins = checkins;
         this.access = access;
         this.members = members;
         this.invites = invites;
@@ -124,6 +128,7 @@ public class TeamService {
         var member = target(projectId, memberId);
         if (member.getJoinStatus() == MemberStatus.APPROVED) return MemberResponse.from(member);
         requireStatus(member, MemberStatus.PENDING);
+        checkins.beforeChange(projectId);
         member.approve(now());
         return MemberResponse.from(member);
     }
@@ -163,6 +168,7 @@ public class TeamService {
         requireStatus(member, MemberStatus.APPROVED);
         protectLastLeader(projectId, member);
         var now = now();
+        checkins.departed(projectId, memberId);
         assignments.removeMember(member, actor, now);
         member.remove(now);
         invites.findByCreatedBy_IdAndIsActiveTrue(memberId).forEach(InviteLink::revoke);

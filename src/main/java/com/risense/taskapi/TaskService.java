@@ -1,5 +1,7 @@
 package com.risense.taskapi;
 
+import com.risense.checkin.CheckinLifecycle;
+
 import com.risense.api.error.ApiException;
 import com.risense.domain.member.ProjectMember;
 import com.risense.domain.project.Project;
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TaskService {
+    private final CheckinLifecycle checkins;
     private final ProjectAccess access;
     private final TaskRepository tasks;
     private final TaskAssigneeRepository assignees;
@@ -23,7 +26,8 @@ public class TaskService {
     private final Clock clock;
 
     public TaskService(ProjectAccess access, TaskRepository tasks, TaskAssigneeRepository assignees,
-            TaskAssigneeHistoryRepository histories, TaskAssignmentService assignments, Clock clock) {
+            TaskAssigneeHistoryRepository histories, TaskAssignmentService assignments, Clock clock, CheckinLifecycle checkins) {
+        this.checkins = checkins;
         this.access = access;
         this.tasks = tasks;
         this.assignees = assignees;
@@ -81,7 +85,11 @@ public class TaskService {
     public TaskResponse cancel(long projectId, long taskId, long userId) {
         writable(projectId, userId);
         var task = task(projectId, taskId);
-        if (task.getStatus() != TaskStatus.CANCELLED) task.cancel(now());
+        if (task.getStatus() != TaskStatus.CANCELLED) {
+            checkins.beforeChange(projectId);
+            task.cancel(now());
+            checkins.cancelled(projectId, taskId);
+        }
         return response(task);
     }
 

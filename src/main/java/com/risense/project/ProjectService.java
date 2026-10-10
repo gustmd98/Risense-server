@@ -1,5 +1,7 @@
 package com.risense.project;
 
+import com.risense.checkin.CheckinLifecycle;
+
 import com.risense.api.error.ApiException;
 import com.risense.domain.member.*;
 import com.risense.domain.project.*;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProjectService {
+    private final CheckinLifecycle checkins;
     private final ProjectRepository projects;
     private final ProjectMemberRepository members;
     private final ProjectCheckinDayRepository days;
@@ -22,7 +25,8 @@ public class ProjectService {
     private final Clock clock;
 
     public ProjectService(ProjectRepository projects, ProjectMemberRepository members,
-            ProjectCheckinDayRepository days, UserRepository users, ProjectAccess access, Clock clock) {
+            ProjectCheckinDayRepository days, UserRepository users, ProjectAccess access, Clock clock, CheckinLifecycle checkins) {
+        this.checkins = checkins;
         this.projects = projects;
         this.members = members;
         this.days = days;
@@ -42,6 +46,7 @@ public class ProjectService {
         projects.saveAndFlush(project);
         members.save(ProjectMember.leader(project, user, now));
         days.saveAll(request.checkinDays().stream().map(day -> ProjectCheckinDay.of(project, day)).toList());
+        checkins.initialize(project.getId());
         return ProjectResponse.from(project, MemberRole.LEADER, request.checkinDays());
     }
 
@@ -70,6 +75,7 @@ public class ProjectService {
         var member = access.manager(projectId, userId);
         access.requireWritable(project);
         validateSchedule(request);
+        checkins.beforeChange(projectId);
         applySettings(project, request, OffsetDateTime.now(clock));
         // Update the difference, avoiding DELETE/INSERT conflicts for the same composite key.
         var existing = days.findById_ProjectId(projectId);
@@ -81,6 +87,7 @@ public class ProjectService {
         }
         days.saveAll(selected.stream().filter(day -> !previous.contains(day))
                 .map(day -> ProjectCheckinDay.of(project, day)).toList());
+        checkins.changeSchedule(projectId, request.checkinDays());
         return ProjectResponse.from(project, member.getRole(), request.checkinDays());
     }
 
@@ -89,7 +96,11 @@ public class ProjectService {
         Project project = access.lockedProject(projectId);
         var member = access.manager(projectId, userId);
         // Retrying a close request preserves the original close timestamp.
-        if (project.getStatus() != ProjectStatus.CLOSED) project.close(OffsetDateTime.now(clock));
+        if (project.getStatus() != ProjectStatus.CLOSED) {
+            checkins.beforeChange(projectId);
+            project.close(OffsetDateTime.now(clock));
+            checkins.closed(projectId);
+        }
         return response(project, member.getRole());
     }
 

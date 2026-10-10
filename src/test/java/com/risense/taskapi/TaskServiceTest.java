@@ -24,7 +24,7 @@ class TaskServiceTest {
     private final TaskAssigneeHistoryRepository histories = mock(TaskAssigneeHistoryRepository.class);
     private final TaskAssignmentService assignments = mock(TaskAssignmentService.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-08T00:00:00Z"), ZoneOffset.UTC);
-    private final TaskService service = new TaskService(new ProjectAccess(projects, members), tasks, assignees, histories, assignments, clock);
+    private final TaskService service = new TaskService(new ProjectAccess(projects, members), tasks, assignees, histories, assignments, clock, mock(com.risense.checkin.CheckinLifecycle.class));
     private Project project;
     private ProjectMember actor;
     private Task task;

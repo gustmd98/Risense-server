@@ -1,5 +1,7 @@
 package com.risense.taskapi;
 
+import com.risense.checkin.CheckinLifecycle;
+
 import com.risense.api.error.ApiException;
 import com.risense.domain.member.*;
 import com.risense.domain.task.*;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TaskRelationService {
+    private final CheckinLifecycle checkins;
     private final ProjectAccess access;
     private final TaskRepository tasks;
     private final ProjectMemberRepository members;
@@ -23,7 +26,8 @@ public class TaskRelationService {
     private final Clock clock;
 
     public TaskRelationService(ProjectAccess access, TaskRepository tasks, ProjectMemberRepository members,
-            TaskPrerequisiteRepository prerequisites, SubTaskRepository children, TaskArtifactRepository artifacts, Clock clock) {
+            TaskPrerequisiteRepository prerequisites, SubTaskRepository children, TaskArtifactRepository artifacts, Clock clock, CheckinLifecycle checkins) {
+        this.checkins = checkins;
         this.access = access;
         this.tasks = tasks;
         this.members = members;
@@ -90,6 +94,7 @@ public class TaskRelationService {
             if (max == Integer.MAX_VALUE) throw error(HttpStatus.CONFLICT, "SUBTASK_ORDER_LIMIT", "하위 작업 정렬 순서 범위를 초과했습니다.");
             order = max + 1;
         }
+        checkins.beforeChange(projectId);
         var child = children.saveAndFlush(SubTask.create(write.task(), request.title(), assignee, order));
         recalculateProgress(write.task());
         write.task().setUpdatedAt(now());
@@ -119,6 +124,7 @@ public class TaskRelationService {
         }
         if (request.completed() == null) throw error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "완료 여부를 입력해주세요.");
         if (!Objects.equals(child.getCompleted(), request.completed())) {
+            checkins.beforeChange(projectId);
             child.setCompleted(request.completed());
             recalculateProgress(write.task());
             write.task().setUpdatedAt(now());
@@ -129,7 +135,9 @@ public class TaskRelationService {
     @Transactional
     public void deleteChild(long projectId, long taskId, long childId, long userId) {
         var write = writable(projectId, taskId, userId, true);
-        children.delete(child(taskId, childId));
+        var child = child(taskId, childId);
+        checkins.beforeChange(projectId);
+        children.delete(child);
         children.flush();
         recalculateProgress(write.task());
         write.task().setUpdatedAt(now());

@@ -26,7 +26,7 @@ class TeamServiceTest {
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-08T00:00:00Z"), ZoneOffset.UTC);
     private final ProjectAccess access = new ProjectAccess(projects, members);
     private final TaskAssignmentService assignments = mock(TaskAssignmentService.class);
-    private final TeamService service = new TeamService(access, members, invites, users, clock, assignments);
+    private final TeamService service = new TeamService(access, members, invites, users, clock, assignments, mock(com.risense.checkin.CheckinLifecycle.class));
     private final String token = "a".repeat(64);
     private Project project;
     private ProjectMember actor;

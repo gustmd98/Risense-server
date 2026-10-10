@@ -25,7 +25,7 @@ class TaskRelationServiceTest {
     private final TaskArtifactRepository artifacts = mock(TaskArtifactRepository.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-08T00:00:00Z"), ZoneOffset.UTC);
     private final TaskRelationService service = new TaskRelationService(new ProjectAccess(projects, members), tasks,
-            members, prerequisites, children, artifacts, clock);
+            members, prerequisites, children, artifacts, clock, mock(com.risense.checkin.CheckinLifecycle.class));
     private Project project;
     private ProjectMember actor, member;
     private Task task, other, third;
