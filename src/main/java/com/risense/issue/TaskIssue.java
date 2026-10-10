@@ -10,7 +10,11 @@ import lombok.*;
 @Table(name = "task_issues")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class TaskIssue {
+public class TaskIssue implements org.springframework.data.domain.Persistable<Long> {
+    @Transient private boolean fresh = true;
+    @Override public Long getId() { return taskId; }
+    @Override public boolean isNew() { return fresh; }
+    @PostLoad @PostPersist private void persisted() { fresh = false; }
     @Id private Long taskId;
     @OneToOne(fetch = FetchType.LAZY, optional = false) @MapsId @JoinColumn(name = "task_id")
     private Task task;
