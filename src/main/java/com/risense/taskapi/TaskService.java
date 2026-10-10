@@ -73,6 +73,7 @@ public class TaskService {
         writable(projectId, userId);
         var task = task(projectId, taskId);
         editable(task);
+        checkins.beforeChange(projectId);
         task.setTitle(request.title());
         task.setSize(request.size());
         task.setDueDate(request.dueDate());

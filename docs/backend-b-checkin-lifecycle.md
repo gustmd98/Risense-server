@@ -11,7 +11,7 @@
 
 ## 실행과 트랜잭션
 
-ProjectService, TaskAssignmentService, TeamService, TaskService, TaskRelationService에 승인된 호출을 추가했다. 권한 확인 후 데이터를 바꾸기 전에 도래한 회차를 생성한다. 회차·대상 처리와 A의 변경은 같은 프로젝트 잠금·트랜잭션을 사용한다.
+ProjectService, TaskAssignmentService, TeamService, TaskService, TaskRelationService에 승인된 호출을 추가했다. 권한 확인 후 데이터를 바꾸기 전에 도래한 회차를 생성한다. 작업 이름 수정도 먼저 회차를 생성해 시작 당시 이름을 보존한다. 회차·대상 처리와 A의 변경은 같은 프로젝트 잠금·트랜잭션을 사용한다.
 
 자동 작업은 기본 60초마다 진행 중 프로젝트를 100개씩 조회하고 프로젝트별 트랜잭션으로 회차를 생성한다. 실패한 프로젝트는 로그에 남고 다음 실행 때 재시도한다. 여러 인스턴스가 실행해도 같은 프로젝트 행 잠금과 회차 고유 제약을 사용한다. 조회·제출 때도 도래한 회차를 생성하므로 스캔 지연 중에도 같은 규칙을 적용한다.
 
