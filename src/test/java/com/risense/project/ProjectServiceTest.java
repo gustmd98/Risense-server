@@ -22,7 +22,7 @@ class ProjectServiceTest {
     private final UserRepository users = mock(UserRepository.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-08T00:00:00Z"), ZoneOffset.UTC);
     private final ProjectAccess access = new ProjectAccess(projects, members);
-    private final ProjectService service = new ProjectService(projects, members, days, users, access, clock);
+    private final ProjectService service = new ProjectService(projects, members, days, users, access, clock, mock(com.risense.checkin.CheckinLifecycle.class));
     private User user;
     private Project project;
     private ProjectMember membership;

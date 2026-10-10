@@ -1,5 +1,7 @@
 package com.risense.taskapi;
 
+import com.risense.checkin.CheckinLifecycle;
+
 import com.risense.api.error.ApiException;
 import com.risense.domain.member.*;
 import com.risense.domain.task.*;
@@ -14,13 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(propagation = Propagation.MANDATORY)
 public class TaskAssignmentService {
+    private final CheckinLifecycle checkins;
     private final TaskAssigneeRepository assignments;
     private final TaskAssigneeHistoryRepository histories;
     private final ProjectMemberRepository members;
     private final SubTaskRepository children;
 
     public TaskAssignmentService(TaskAssigneeRepository assignments, TaskAssigneeHistoryRepository histories,
-            ProjectMemberRepository members, SubTaskRepository children) {
+            ProjectMemberRepository members, SubTaskRepository children, CheckinLifecycle checkins) {
+        this.checkins = checkins;
         this.assignments = assignments;
         this.histories = histories;
         this.members = members;
@@ -40,6 +44,7 @@ public class TaskAssignmentService {
                     .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "INVALID_ASSIGNEES", "같은 프로젝트의 승인된 팀원만 담당자로 지정할 수 있습니다."));
             selected.put(id, member);
         }
+        checkins.beforeChange(task.getProject().getId());
         var existing = assignments.findForTask(task.getId());
         Set<Long> current = new HashSet<>();
         List<TaskAssigneeHistory> events = new ArrayList<>();
@@ -47,6 +52,7 @@ public class TaskAssignmentService {
             Long memberId = assignment.getMember().getId();
             current.add(memberId);
             if (!selected.containsKey(memberId)) {
+                checkins.unassigned(task.getProject().getId(), task.getId(), memberId);
                 assignments.delete(assignment);
                 events.add(TaskAssigneeHistory.record(task, assignment.getMember(), AssigneeAction.UNASSIGN, actor, now));
             }
