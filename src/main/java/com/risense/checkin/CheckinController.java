@@ -27,6 +27,8 @@ public class CheckinController {
     private final CheckinService service;
     public CheckinController(CheckinService service) { this.service=service; }
     @GetMapping("/current") @Operation(summary="현재 체크인 조회",description="회차가 없으면 round=null. canSubmit/canEdit와 unavailableReason으로 버튼 상태를 결정합니다.")
+    @ApiResponse(responseCode="200", description="현재 체크인 조회 성공. 회차가 없는 경우에도 200이며 round와 phase는 null, targets는 빈 배열입니다.",
+            content=@Content(mediaType="application/json", schema=@Schema(implementation=Current.class)))
     public Current current(@PathVariable long projectId,@Parameter(hidden=true) @AuthenticationPrincipal Jwt jwt) {
         return service.current(projectId,Long.parseLong(jwt.getSubject()));
     }
