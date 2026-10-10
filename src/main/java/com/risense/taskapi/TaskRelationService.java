@@ -91,6 +91,7 @@ public class TaskRelationService {
             order = max + 1;
         }
         var child = children.saveAndFlush(SubTask.create(write.task(), request.title(), assignee, order));
+        recalculateProgress(write.task());
         write.task().setUpdatedAt(now());
         return RelationResponses.Child.from(child);
     }
@@ -118,7 +119,9 @@ public class TaskRelationService {
         }
         if (request.completed() == null) throw error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "완료 여부를 입력해주세요.");
         if (!Objects.equals(child.getCompleted(), request.completed())) {
-            child.setCompleted(request.completed()); write.task().setUpdatedAt(now());
+            child.setCompleted(request.completed());
+            recalculateProgress(write.task());
+            write.task().setUpdatedAt(now());
         }
         return RelationResponses.Child.from(child);
     }
@@ -127,6 +130,8 @@ public class TaskRelationService {
     public void deleteChild(long projectId, long taskId, long childId, long userId) {
         var write = writable(projectId, taskId, userId, true);
         children.delete(child(taskId, childId));
+        children.flush();
+        recalculateProgress(write.task());
         write.task().setUpdatedAt(now());
     }
 
@@ -163,6 +168,12 @@ public class TaskRelationService {
         var artifact = artifact(taskId, artifactId);
         requireArtifactOwner(write.actor(), artifact);
         artifacts.delete(artifact); write.task().setUpdatedAt(now());
+    }
+
+    private void recalculateProgress(Task task) {
+        var subtasks = children.findForTask(task.getId());
+        long completed = subtasks.stream().filter(s -> Boolean.TRUE.equals(s.getCompleted())).count();
+        TaskProgress.apply(task, subtasks.size(), completed, now());
     }
 
     private Task readable(long projectId, long taskId, long userId) {

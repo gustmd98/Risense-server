@@ -49,6 +49,25 @@ class TaskRelationServiceTest {
         when(artifacts.findByIdAndTask_Id(40L, 20L)).thenReturn(Optional.of(artifact));
     }
 
+    @Test void completingAndUndoingChildUpdatesParentProgress() {
+        when(children.findForTask(20L)).thenReturn(List.of(child));
+        service.completeChild(10L, 20L, 30L, 1L, new RelationRequests.Completion(true));
+        assertThat(task.getProgress()).isEqualTo(100);
+        assertThat(task.getStatus()).isEqualTo(TaskStatus.DONE);
+        service.completeChild(10L, 20L, 30L, 1L, new RelationRequests.Completion(false));
+        assertThat(task.getProgress()).isZero();
+        assertThat(task.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
+        assertThat(task.getCompletedAt()).isNull();
+    }
+
+    @Test void deletingLastChildReopensParent() {
+        task.setStatus(TaskStatus.DONE); task.setProgress(100); task.setCompletedAt(now());
+        when(children.findForTask(20L)).thenReturn(List.of());
+        service.deleteChild(10L, 20L, 30L, 1L);
+        assertThat(task.getProgress()).isZero();
+        assertThat(task.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
+    }
+
     @Test void invalidAndCrossProjectPrerequisitesDoNotWrite() {
         for (var ids : List.of(List.of(20L), List.of(21L, 21L))) {
             error(() -> service.setPrerequisites(10L, 20L, 1L, new RelationRequests.Prerequisites(ids)), HttpStatus.BAD_REQUEST, "INVALID_PREREQUISITES");
