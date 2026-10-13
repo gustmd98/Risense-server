@@ -1,5 +1,6 @@
 package com.risense.taskapi;
 
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import com.risense.api.error.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,6 +35,7 @@ public class TaskController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "작업 생성", description = "팀장·공동 팀장 전용. TODO/진행률 0, 담당자 없이 생성합니다.")
+    @ApiResponse(responseCode="201", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=TaskResponse.class)))
     public TaskResponse create(@PathVariable("projectId") long projectId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody TaskRequest request) {
         return tasks.create(projectId, userId(jwt), request);
@@ -41,6 +43,7 @@ public class TaskController {
 
     @GetMapping
     @Operation(summary = "작업 목록", description = "승인된 팀원 전용. sortOrder, id 순으로 취소된 작업도 포함합니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", array=@ArraySchema(schema=@Schema(implementation=TaskResponse.class))))
     public List<TaskResponse> list(@PathVariable("projectId") long projectId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return tasks.list(projectId, userId(jwt));
@@ -48,6 +51,7 @@ public class TaskController {
 
     @GetMapping("/{taskId}")
     @Operation(summary = "작업 상세", description = "승인된 팀원 전용.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=TaskResponse.class)))
     public TaskResponse detail(@PathVariable("projectId") long projectId, @PathVariable("taskId") long taskId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return tasks.detail(projectId, taskId, userId(jwt));
@@ -55,6 +59,7 @@ public class TaskController {
 
     @PutMapping("/{taskId}")
     @Operation(summary = "작업 설정 수정", description = "팀장·공동 팀장 전용. 진행률·상태는 변경하지 않습니다. dueDate null은 마감일 제거, sortOrder null은 기존 순서 유지입니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=TaskResponse.class)))
     public TaskResponse update(@PathVariable("projectId") long projectId, @PathVariable("taskId") long taskId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody TaskRequest request) {
         return tasks.update(projectId, taskId, userId(jwt), request);
@@ -62,6 +67,7 @@ public class TaskController {
 
     @PostMapping("/{taskId}/cancel")
     @Operation(summary = "작업 취소", description = "팀장·공동 팀장 전용. 행과 이력을 보존하고 CANCELLED로 전환합니다. 반복 요청은 최초 취소 시간을 유지합니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=TaskResponse.class)))
     public TaskResponse cancel(@PathVariable("projectId") long projectId, @PathVariable("taskId") long taskId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return tasks.cancel(projectId, taskId, userId(jwt));
@@ -69,6 +75,7 @@ public class TaskController {
 
     @PutMapping("/{taskId}/assignees")
     @Operation(summary = "작업 담당자 변경", description = "팀장·공동 팀장 전용. 최종 담당자 memberId 목록을 보냅니다. 빈 배열은 전체 해제. 실제 변경만 ASSIGN/UNASSIGN 이력으로 기록합니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=TaskResponse.class)))
     public TaskResponse assign(@PathVariable("projectId") long projectId, @PathVariable("taskId") long taskId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody AssigneeRequest request) {
         return tasks.setAssignees(projectId, taskId, userId(jwt), request);
@@ -76,6 +83,7 @@ public class TaskController {
 
     @GetMapping("/{taskId}/assignee-histories")
     @Operation(summary = "담당자 변경 이력", description = "승인된 팀원 전용. 변경 시간·이력 ID 내림차순으로 반환합니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", array=@ArraySchema(schema=@Schema(implementation=AssigneeHistoryResponse.class))))
     public List<AssigneeHistoryResponse> history(@PathVariable("projectId") long projectId, @PathVariable("taskId") long taskId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return tasks.history(projectId, taskId, userId(jwt));

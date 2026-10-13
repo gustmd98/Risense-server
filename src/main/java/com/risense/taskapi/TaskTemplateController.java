@@ -1,5 +1,6 @@
 package com.risense.taskapi;
 
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import com.risense.api.error.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,6 +34,7 @@ public class TaskTemplateController {
 
     @GetMapping("/templates")
     @Operation(summary = "작업 템플릿 목록", description = "승인된 팀원 전용. 다섯 가지 템플릿의 작업 제목과 크기를 반환합니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", array=@ArraySchema(schema=@Schema(implementation=TaskTemplate.Summary.class))))
     public List<TaskTemplate.Summary> list(@PathVariable("projectId") long projectId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return templates.list(projectId, Long.parseLong(jwt.getSubject()));
@@ -41,6 +43,7 @@ public class TaskTemplateController {
     @PostMapping("/from-template")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "템플릿 기반 작업 일괄 생성", description = "팀장·공동 팀장 전용. 기존 작업 뒤에 TODO/진행률 0/담당자 없는 작업을 생성합니다. 한 요청의 작업은 모두 함께 저장됩니다. 반복 호출하면 새 작업이 추가됩니다.")
+    @ApiResponse(responseCode="201", description="성공", content=@Content(mediaType="application/json", array=@ArraySchema(schema=@Schema(implementation=TaskResponse.class))))
     public List<TaskResponse> create(@PathVariable("projectId") long projectId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody TaskTemplateRequest request) {
         return templates.create(projectId, Long.parseLong(jwt.getSubject()), request);

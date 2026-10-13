@@ -33,14 +33,17 @@ public class CheckinController {
         return service.current(projectId,Long.parseLong(jwt.getSubject()));
     }
     @GetMapping("/{roundId}/submission") @Operation(summary="내 제출 스냅샷 조회")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=Submission.class)))
     public Submission detail(@PathVariable long projectId,@PathVariable long roundId,@Parameter(hidden=true) @AuthenticationPrincipal Jwt jwt) {
         return service.detail(projectId,roundId,Long.parseLong(jwt.getSubject()));
     }
     @PostMapping("/{roundId}/submission") @Operation(summary="최초 체크인 제출",description="전체 대상과 조회한 버전을 전송합니다. expectedRevision=0. 같은 requestKey/본문 재전송은 기존 응답을 반환합니다. 충돌 시 409.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=Submission.class)))
     public Submission create(@PathVariable long projectId,@PathVariable long roundId,@Parameter(hidden=true) @AuthenticationPrincipal Jwt jwt,@Valid @RequestBody Submit request) {
         return service.submit(projectId,roundId,Long.parseLong(jwt.getSubject()),request,false);
     }
     @PutMapping("/{roundId}/submission") @Operation(summary="정시 체크인 수정",description="최신 expectedRevision과 새 requestKey가 필요합니다. 최초 제출 시각은 유지하며 지각 기간에는 수정할 수 없습니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=Submission.class)))
     public Submission update(@PathVariable long projectId,@PathVariable long roundId,@Parameter(hidden=true) @AuthenticationPrincipal Jwt jwt,@Valid @RequestBody Submit request) {
         return service.submit(projectId,roundId,Long.parseLong(jwt.getSubject()),request,true);
     }

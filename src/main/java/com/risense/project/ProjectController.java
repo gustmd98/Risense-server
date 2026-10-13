@@ -1,5 +1,6 @@
 package com.risense.project;
 
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import com.risense.api.error.ApiError;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,6 +35,7 @@ public class ProjectController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "프로젝트 생성", description = "생성자를 승인된 팀장으로 자동 등록합니다. 체크인 시간은 프로젝트 설정의 현지 시간입니다.")
+    @ApiResponse(responseCode="201", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=ProjectResponse.class)))
     public ProjectResponse create(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody ProjectRequest request) {
         return projects.create(Long.parseLong(jwt.getSubject()), request);
@@ -41,12 +43,14 @@ public class ProjectController {
 
     @GetMapping
     @Operation(summary = "내 프로젝트 목록", description = "승인된 멤버로 참여한 프로젝트를 생성일 내림차순으로 반환합니다. 종료된 프로젝트도 포함합니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", array=@ArraySchema(schema=@Schema(implementation=ProjectResponse.class))))
     public List<ProjectResponse> list(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return projects.list(Long.parseLong(jwt.getSubject()));
     }
 
     @GetMapping("/{projectId}")
     @Operation(summary = "프로젝트 상세", description = "승인된 팀원만 조회할 수 있습니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=ProjectResponse.class)))
     public ProjectResponse detail(@PathVariable("projectId") long projectId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return projects.detail(projectId, Long.parseLong(jwt.getSubject()));
@@ -54,6 +58,7 @@ public class ProjectController {
 
     @PutMapping("/{projectId}")
     @Operation(summary = "프로젝트 설정 수정", description = "팀장·공동 팀장 전용. 모든 설정을 전달합니다. 완료·종료 상태에서는 409를 반환합니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=ProjectResponse.class)))
     public ProjectResponse update(@PathVariable("projectId") long projectId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody ProjectRequest request) {
         return projects.update(projectId, Long.parseLong(jwt.getSubject()), request);
@@ -61,6 +66,7 @@ public class ProjectController {
 
     @PostMapping("/{projectId}/close")
     @Operation(summary = "프로젝트 종료", description = "팀장·공동 팀장 전용. CLOSED로 전환하며 다시 호출해도 최초 종료 시간을 유지합니다. 재개 API는 없습니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=ProjectResponse.class)))
     public ProjectResponse close(@PathVariable("projectId") long projectId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return projects.close(projectId, Long.parseLong(jwt.getSubject()));

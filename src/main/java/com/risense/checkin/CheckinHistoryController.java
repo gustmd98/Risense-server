@@ -26,15 +26,18 @@ public class CheckinHistoryController {
     private final CheckinHistoryService service;
     public CheckinHistoryController(CheckinHistoryService service) { this.service=service; }
     @GetMapping("/{roundId}/status") @Operation(summary="회차별 팀 체크인 현황",description="승인된 팀원 전용. 유효 대상 없는 팀원은 제외합니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=Status.class)))
     public Status status(@PathVariable long projectId,@PathVariable long roundId,@Parameter(hidden=true) @AuthenticationPrincipal Jwt jwt) {
         return service.status(projectId,roundId,Long.parseLong(jwt.getSubject()));
     }
     @GetMapping("/mine") @Operation(summary="내 체크인 기록",description="최신 회차부터 조회. nextBeforeRoundId를 다음 요청에 전달합니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=HistoryPage.class)))
     public HistoryPage mine(@PathVariable long projectId,@Parameter(hidden=true) @AuthenticationPrincipal Jwt jwt,
             @RequestParam(required=false) Long beforeRoundId,@RequestParam(defaultValue="20") int limit) {
         return service.mine(projectId,Long.parseLong(jwt.getSubject()),beforeRoundId,limit);
     }
     @GetMapping("/summary") @Operation(summary="프로젝트 체크인 누적 집계",description="제출자 수 합/대상자 수 합. 분모가 0이면 submissionRate=null이며 리스크 점수는 포함하지 않습니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=Summary.class)))
     public Summary summary(@PathVariable long projectId,@Parameter(hidden=true) @AuthenticationPrincipal Jwt jwt) {
         return service.aggregate(projectId,Long.parseLong(jwt.getSubject()));
     }
