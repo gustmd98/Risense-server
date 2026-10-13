@@ -1,5 +1,7 @@
 package com.risense.checkin;
 
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import java.time.*;
@@ -35,7 +37,9 @@ public final class CheckinData {
             boolean departed, int targetCount, Submission submission) {}
     public record Summary(long eligible, long submitted, long onTime, long late, long missed,
             long pending, java.math.BigDecimal submissionRate) {}
-    public record Status(Round round, Instant serverTime, Summary summary, List<MemberStatus> members) {}
-    public record HistoryPage(List<History> items, Long nextBeforeRoundId) {}
+    public record Status(Round round, Instant serverTime, Summary summary,
+            @ArraySchema(schema=@Schema(implementation=MemberStatus.class)) List<MemberStatus> members) {}
+    public record HistoryPage(
+            @ArraySchema(schema=@Schema(implementation=History.class)) List<History> items, Long nextBeforeRoundId) {}
     public record History(Round round, String status, int targetCount, Submission submission) {}
 }

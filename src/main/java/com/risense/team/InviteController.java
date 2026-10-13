@@ -27,6 +27,7 @@ public class InviteController {
 
     @GetMapping("/{token}")
     @Operation(summary = "초대 링크 검증", description = "로그인 없이 유효성·프로젝트 이름만 확인합니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=InvitePreview.class)))
     public InvitePreview preview(@PathVariable("token") String token) { return team.preview(token); }
 
     @PostMapping("/{token}/join")
@@ -35,6 +36,7 @@ public class InviteController {
     @ApiResponses({
             @ApiResponse(responseCode = "401", description = "로그인 필요", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=MemberResponse.class)))
     public MemberResponse join(@PathVariable("token") String token,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return team.join(token, Long.parseLong(jwt.getSubject()));

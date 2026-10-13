@@ -43,6 +43,7 @@ public class TaskRelationController {
 
     @PutMapping("/prerequisites")
     @Operation(summary = "선행 작업 변경", description = "팀장·공동 팀장 전용. 최종 작업 ID 목록을 지정합니다. 빈 배열은 해제. 자기 참조·중복·다른 프로젝트·취소 작업·순환 관계를 차단합니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", array=@ArraySchema(schema=@Schema(implementation=RelationResponses.Prerequisite.class))))
     public List<RelationResponses.Prerequisite> prerequisites(@PathVariable("projectId") long projectId,
             @PathVariable("taskId") long taskId, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody RelationRequests.Prerequisites request) {
@@ -51,6 +52,7 @@ public class TaskRelationController {
 
     @GetMapping("/sub-tasks")
     @Operation(summary = "하위 작업 목록", description = "승인된 팀원 전용. 정렬 순서·ID 오름차순.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", array=@ArraySchema(schema=@Schema(implementation=RelationResponses.Child.class))))
     public List<RelationResponses.Child> children(@PathVariable("projectId") long projectId,
             @PathVariable("taskId") long taskId, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return relations.children(projectId, taskId, userId(jwt));
@@ -59,6 +61,7 @@ public class TaskRelationController {
     @PostMapping("/sub-tasks")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "하위 작업 생성", description = "팀장·공동 팀장 전용. completed=false로 생성합니다.")
+    @ApiResponse(responseCode="201", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=RelationResponses.Child.class)))
     public RelationResponses.Child createChild(@PathVariable("projectId") long projectId,
             @PathVariable("taskId") long taskId, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody RelationRequests.SubTaskSettings request) {
@@ -67,6 +70,7 @@ public class TaskRelationController {
 
     @PutMapping("/sub-tasks/{subTaskId}")
     @Operation(summary = "하위 작업 설정 변경", description = "팀장·공동 팀장 전용. assigneeMemberId=null이면 담당자 해제, sortOrder=null이면 기존 순서 유지.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=RelationResponses.Child.class)))
     public RelationResponses.Child updateChild(@PathVariable("projectId") long projectId,
             @PathVariable("taskId") long taskId, @PathVariable("subTaskId") long childId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody RelationRequests.SubTaskSettings request) {
@@ -75,6 +79,7 @@ public class TaskRelationController {
 
     @PatchMapping("/sub-tasks/{subTaskId}/completion")
     @Operation(summary = "하위 작업 완료 표시", description = "관리자 또는 해당 담당자 전용. 부모 작업 진행률·상태는 직접 변경하지 않습니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=RelationResponses.Child.class)))
     public RelationResponses.Child completeChild(@PathVariable("projectId") long projectId,
             @PathVariable("taskId") long taskId, @PathVariable("subTaskId") long childId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody RelationRequests.Completion request) {
@@ -84,6 +89,7 @@ public class TaskRelationController {
     @DeleteMapping("/sub-tasks/{subTaskId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "하위 작업 삭제", description = "팀장·공동 팀장 전용. 부모 작업과 담당자 변경 이력은 보존합니다.")
+    @ApiResponse(responseCode="204", description="처리 성공. 응답 본문 없음", content=@Content)
     public void deleteChild(@PathVariable("projectId") long projectId,
             @PathVariable("taskId") long taskId, @PathVariable("subTaskId") long childId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
@@ -102,6 +108,7 @@ public class TaskRelationController {
     @PostMapping("/artifacts")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "산출물 링크 등록", description = "승인된 팀원 전용. HTTP/HTTPS 링크를 저장하며 서버에서 링크 내용을 불러오지 않습니다.")
+    @ApiResponse(responseCode="201", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=RelationResponses.Artifact.class)))
     public RelationResponses.Artifact createArtifact(@PathVariable("projectId") long projectId,
             @PathVariable("taskId") long taskId, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody RelationRequests.Artifact request) {
@@ -110,6 +117,7 @@ public class TaskRelationController {
 
     @PutMapping("/artifacts/{artifactId}")
     @Operation(summary = "산출물 링크 수정", description = "작성자 또는 관리자 전용. 최초 작성자·작성 시간은 유지합니다.")
+    @ApiResponse(responseCode="200", description="성공", content=@Content(mediaType="application/json", schema=@Schema(implementation=RelationResponses.Artifact.class)))
     public RelationResponses.Artifact updateArtifact(@PathVariable("projectId") long projectId,
             @PathVariable("taskId") long taskId, @PathVariable("artifactId") long artifactId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody RelationRequests.Artifact request) {
@@ -119,6 +127,7 @@ public class TaskRelationController {
     @DeleteMapping("/artifacts/{artifactId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "산출물 링크 삭제", description = "작성자 또는 관리자 전용.")
+    @ApiResponse(responseCode="204", description="처리 성공. 응답 본문 없음", content=@Content)
     public void deleteArtifact(@PathVariable("projectId") long projectId,
             @PathVariable("taskId") long taskId, @PathVariable("artifactId") long artifactId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
