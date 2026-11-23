@@ -42,7 +42,7 @@ public class TaskTemplateController {
 
     @PostMapping("/from-template")
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "템플릿 기반 작업 일괄 생성", description = "팀장·공동 팀장 전용. 기존 작업 뒤에 TODO/진행률 0/담당자 없는 작업을 생성합니다. 한 요청의 작업은 모두 함께 저장됩니다. 반복 호출하면 새 작업이 추가됩니다.")
+    @Operation(summary = "템플릿 기반 작업 일괄 생성", description = "팀장·공동 팀장 전용. 기존 작업 뒤에 TODO/진행률 0/담당자 없는 작업을 생성합니다. 기존 template+dueDate 또는 template+items(항목별 itemId/startDate/dueDate/prerequisiteItemIds)를 지원합니다. 한 요청의 작업은 모두 함께 저장됩니다. 반복 호출하면 새 작업이 추가됩니다.")
     @ApiResponse(responseCode="201", description="성공", content=@Content(mediaType="application/json", array=@ArraySchema(schema=@Schema(implementation=TaskResponse.class))))
     public List<TaskResponse> create(@PathVariable("projectId") long projectId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody TaskTemplateRequest request) {

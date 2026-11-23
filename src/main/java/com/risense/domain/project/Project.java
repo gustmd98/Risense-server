@@ -40,6 +40,9 @@ public class Project {
     @Column(name = "title", nullable = false, length = 100)
     private String title;
 
+    @Column(name = "project_type", nullable = false, length = 20)
+    private String projectType = "other";
+
     @Column(name = "class_name", nullable = true, length = 100)
     private String className;
 

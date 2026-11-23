@@ -119,6 +119,7 @@ public class ProjectService {
     }
 
     private void applySettings(Project project, ProjectRequest request, OffsetDateTime now) {
+        if (request.projectType() != null) project.setProjectType(request.projectType());
         project.setTitle(request.title());
         project.setClassName(request.className());
         project.setDeadline(request.deadline());

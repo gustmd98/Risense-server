@@ -24,9 +24,11 @@ public class TaskService {
     private final TaskAssigneeHistoryRepository histories;
     private final TaskAssignmentService assignments;
     private final Clock clock;
+    private final TaskArtifactRepository artifacts;
 
     public TaskService(ProjectAccess access, TaskRepository tasks, TaskAssigneeRepository assignees,
-            TaskAssigneeHistoryRepository histories, TaskAssignmentService assignments, Clock clock, CheckinLifecycle checkins) {
+            TaskAssigneeHistoryRepository histories, TaskAssignmentService assignments, Clock clock, CheckinLifecycle checkins, TaskArtifactRepository artifacts) {
+        this.artifacts = artifacts;
         this.checkins = checkins;
         this.access = access;
         this.tasks = tasks;
@@ -41,6 +43,7 @@ public class TaskService {
         Project project = access.lockedProject(projectId);
         access.manager(projectId, userId);
         access.requireWritable(project);
+        TaskDates.validate(request.startDate(), request.dueDate());
         int order;
         if (request.sortOrder() != null) order = request.sortOrder();
         else {
@@ -48,8 +51,10 @@ public class TaskService {
             if (max == Integer.MAX_VALUE) throw new ApiException(HttpStatus.CONFLICT, "TASK_ORDER_LIMIT", "작업 정렬 순서 범위를 초과했습니다.");
             order = max + 1;
         }
-        var task = tasks.saveAndFlush(Task.create(project, request.title(), request.size(), request.dueDate(), order, now()));
-        return TaskResponse.from(task, List.of());
+        var task = Task.create(project, request.title(), request.size(), request.dueDate(), order, now());
+        task.setStartDate(request.startDate());
+        tasks.saveAndFlush(task);
+        return TaskResponse.from(task, List.of(), today(), false);
     }
 
     @Transactional(readOnly = true)
@@ -59,7 +64,9 @@ public class TaskService {
         if (found.isEmpty()) return List.of();
         var byTask = assignees.findForTasks(found.stream().map(Task::getId).toList()).stream()
                 .collect(Collectors.groupingBy(a -> a.getTask().getId()));
-        return found.stream().map(task -> TaskResponse.from(task, byTask.getOrDefault(task.getId(), List.of()))).toList();
+        var withArtifacts = new java.util.HashSet<>(artifacts.findTaskIdsWithArtifacts(projectId));
+        return found.stream().map(task -> TaskResponse.from(task, byTask.getOrDefault(task.getId(), List.of()),
+                today(), withArtifacts.contains(task.getId()))).toList();
     }
 
     @Transactional(readOnly = true)
@@ -73,7 +80,10 @@ public class TaskService {
         writable(projectId, userId);
         var task = task(projectId, taskId);
         editable(task);
+        var start = request.startDate() == null ? task.getStartDate() : request.startDate();
+        TaskDates.validate(start, request.dueDate());
         checkins.beforeChange(projectId);
+        task.setStartDate(start);
         task.setTitle(request.title());
         task.setSize(request.size());
         task.setDueDate(request.dueDate());
@@ -111,6 +121,23 @@ public class TaskService {
         return histories.findForTask(taskId).stream().map(AssigneeHistoryResponse::from).toList();
     }
 
+    @Transactional
+    public TaskResponse schedule(long projectId, long taskId, long userId, TaskScheduleRequest request) {
+        writable(projectId, userId);
+        var task = task(projectId, taskId);
+        editable(task);
+        if (request.expectedRevision() == null || request.expectedRevision() != task.getRevision())
+            throw new ApiException(HttpStatus.CONFLICT, "TASK_VERSION_CONFLICT", "작업이 변경되었습니다. 다시 조회해주세요.");
+        TaskDates.validate(request.startDate(), request.dueDate());
+        checkins.beforeChange(projectId);
+        task.setStartDate(request.startDate());
+        task.setDueDate(request.dueDate());
+        task.setUpdatedAt(now());
+        return response(task);
+    }
+
+    private java.time.LocalDate today() { return java.time.LocalDate.now(clock.withZone(java.time.ZoneId.of("Asia/Seoul"))); }
+
     private void readable(long projectId, long userId) {
         access.project(projectId);
         access.approvedMember(projectId, userId);
@@ -134,6 +161,9 @@ public class TaskService {
         }
     }
 
-    private TaskResponse response(Task task) { return TaskResponse.from(task, assignees.findForTask(task.getId())); }
+    private TaskResponse response(Task task) {
+        tasks.flush();
+        return TaskResponse.from(task, assignees.findForTask(task.getId()), today(), artifacts.existsByTask_Id(task.getId()));
+    }
     private OffsetDateTime now() { return OffsetDateTime.now(clock); }
 }

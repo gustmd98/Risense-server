@@ -21,7 +21,7 @@ class TaskTemplateServiceTest {
     private final ProjectMemberRepository members = mock(ProjectMemberRepository.class);
     private final TaskRepository tasks = mock(TaskRepository.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-08T00:00:00Z"), ZoneOffset.UTC);
-    private final TaskTemplateService service = new TaskTemplateService(new ProjectAccess(projects, members), tasks, clock);
+    private final TaskTemplateService service = new TaskTemplateService(new ProjectAccess(projects, members), tasks, clock, mock(TaskPrerequisiteRepository.class));
     private Project project;
     private ProjectMember actor;
 
