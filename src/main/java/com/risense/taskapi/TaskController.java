@@ -22,11 +22,11 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "작업 관리")
 @SecurityRequirement(name = "bearerAuth")
 @ApiResponses({
-        @ApiResponse(responseCode = "400", description = "INVALID_REQUEST / INVALID_ASSIGNEES", content = @Content(schema = @Schema(implementation = ApiError.class))),
+        @ApiResponse(responseCode = "400", description = "INVALID_REQUEST / INVALID_ASSIGNEES / INVALID_TASK_DATES", content = @Content(schema = @Schema(implementation = ApiError.class))),
         @ApiResponse(responseCode = "401", description = "로그인 필요", content = @Content(schema = @Schema(implementation = ApiError.class))),
         @ApiResponse(responseCode = "403", description = "PROJECT_ACCESS_DENIED / PROJECT_MANAGER_REQUIRED", content = @Content(schema = @Schema(implementation = ApiError.class))),
         @ApiResponse(responseCode = "404", description = "PROJECT_NOT_FOUND / TASK_NOT_FOUND", content = @Content(schema = @Schema(implementation = ApiError.class))),
-        @ApiResponse(responseCode = "409", description = "PROJECT_NOT_WRITABLE / TASK_CANCELLED / TASK_ORDER_LIMIT", content = @Content(schema = @Schema(implementation = ApiError.class)))
+        @ApiResponse(responseCode = "409", description = "PROJECT_NOT_WRITABLE / TASK_CANCELLED / TASK_ORDER_LIMIT / TASK_VERSION_CONFLICT", content = @Content(schema = @Schema(implementation = ApiError.class)))
 })
 public class TaskController {
     private final TaskService tasks;
@@ -87,6 +87,14 @@ public class TaskController {
     public List<AssigneeHistoryResponse> history(@PathVariable("projectId") long projectId, @PathVariable("taskId") long taskId,
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         return tasks.history(projectId, taskId, userId(jwt));
+    }
+
+    @PatchMapping("/{taskId}/schedule")
+    @Operation(summary = "작업 일정 변경", description = "팀장·공동 팀장 전용. startDate와 dueDate를 모두 전송합니다. null은 날짜 제거. 최신 revision을 expectedRevision으로 전송하며 충돌 시 409입니다.")
+    @ApiResponse(responseCode="200", description="확정 일정과 새 revision", content=@Content(mediaType="application/json", schema=@Schema(implementation=TaskResponse.class)))
+    public TaskResponse schedule(@PathVariable("projectId") long projectId, @PathVariable("taskId") long taskId,
+            @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody TaskScheduleRequest request) {
+        return tasks.schedule(projectId, taskId, userId(jwt), request);
     }
 
     private long userId(Jwt jwt) { return Long.parseLong(jwt.getSubject()); }

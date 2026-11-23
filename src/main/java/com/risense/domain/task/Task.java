@@ -60,6 +60,13 @@ public class Task {
     @Column(name = "progress", nullable = false)
     private Integer progress;
 
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Version
+    @Column(nullable = false)
+    private long revision;
+
     @Column(name = "due_date", nullable = true)
     private LocalDate dueDate;
 

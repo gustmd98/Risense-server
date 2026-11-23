@@ -9,6 +9,10 @@ public record TaskRequest(
         @NotBlank @Size(max = 100) @Schema(example = "발표 자료 작성") String title,
         @NotNull @Schema(example = "M") TaskSize size,
         @Schema(example = "2026-12-15", description = "null이면 마감일 없음") LocalDate dueDate,
-        @Min(0) @Schema(description = "생성 시 생략하면 목록 끝, 수정 시 생략하면 기존 순서 유지") Integer sortOrder) {
+        @Min(0) @Schema(description = "생성 시 생략하면 목록 끝, 수정 시 생략하면 기존 순서 유지") Integer sortOrder,
+        @Schema(description = "작업 시작일. 생성 시 null 허용, PUT에서 null/생략은 기존 값 유지. 제거는 schedule PATCH 사용", example = "2026-12-01") LocalDate startDate) {
+    public TaskRequest(String title, TaskSize size, LocalDate dueDate, Integer sortOrder) {
+        this(title, size, dueDate, sortOrder, null);
+    }
     public TaskRequest { title = title == null ? null : title.strip(); }
 }

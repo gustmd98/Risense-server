@@ -24,7 +24,7 @@ class TaskServiceTest {
     private final TaskAssigneeHistoryRepository histories = mock(TaskAssigneeHistoryRepository.class);
     private final TaskAssignmentService assignments = mock(TaskAssignmentService.class);
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-08T00:00:00Z"), ZoneOffset.UTC);
-    private final TaskService service = new TaskService(new ProjectAccess(projects, members), tasks, assignees, histories, assignments, clock, mock(com.risense.checkin.CheckinLifecycle.class));
+    private final TaskService service = new TaskService(new ProjectAccess(projects, members), tasks, assignees, histories, assignments, clock, mock(com.risense.checkin.CheckinLifecycle.class), mock(TaskArtifactRepository.class));
     private Project project;
     private ProjectMember actor;
     private Task task;
@@ -129,6 +129,55 @@ class TaskServiceTest {
         when(tasks.maxSortOrder(10L)).thenReturn(Integer.MAX_VALUE);
         error(() -> service.create(10L, 1L, request(null)), HttpStatus.CONFLICT, "TASK_ORDER_LIMIT");
         verify(tasks, never()).saveAndFlush(any());
+    }
+
+    @Test void metadataEditPreservesStartDateAndValidatesEffectiveRange() {
+        task.setStartDate(LocalDate.of(2026, 12, 10));
+        service.update(10L, 20L, 1L, new TaskRequest("changed", TaskSize.M, LocalDate.of(2026,12,20), null));
+        assertThat(task.getStartDate()).isEqualTo(LocalDate.of(2026,12,10));
+        error(() -> service.update(10L,20L,1L,new TaskRequest("bad",TaskSize.S,LocalDate.of(2026,12,1),null)),
+                HttpStatus.BAD_REQUEST,"INVALID_TASK_DATES");
+    }
+
+    @Test void scheduleChangesDatesTogetherAndRejectsStaleRevision() {
+        task.setRevision(2);
+        error(() -> service.schedule(10L,20L,1L,new TaskScheduleRequest(null,null,1L)),
+                HttpStatus.CONFLICT,"TASK_VERSION_CONFLICT");
+        assertThat(task.getDueDate()).isNull();
+        var result=service.schedule(10L,20L,1L,new TaskScheduleRequest(LocalDate.of(2026,12,1),LocalDate.of(2026,12,10),2L));
+        assertThat(result.startDate()).isEqualTo(LocalDate.of(2026,12,1));
+        assertThat(result.dueDate()).isEqualTo(LocalDate.of(2026,12,10));
+        service.schedule(10L,20L,1L,new TaskScheduleRequest(null,null,2L));
+        assertThat(task.getStartDate()).isNull(); assertThat(task.getDueDate()).isNull();
+    }
+
+    @Test void invalidScheduleAndRestrictedWritesDoNotChangeDates() {
+        error(() -> service.schedule(10L,20L,1L,new TaskScheduleRequest(LocalDate.of(2026,12,2),LocalDate.of(2026,12,1),0L)),
+                HttpStatus.BAD_REQUEST,"INVALID_TASK_DATES");
+        assertThat(task.getStartDate()).isNull();
+        actor.setRole(MemberRole.MEMBER);
+        error(() -> service.schedule(10L,20L,1L,new TaskScheduleRequest(null,null,0L)),HttpStatus.FORBIDDEN,"PROJECT_MANAGER_REQUIRED");
+        actor.setRole(MemberRole.LEADER); project.setStatus(ProjectStatus.CLOSED);
+        error(() -> service.schedule(10L,20L,1L,new TaskScheduleRequest(null,null,0L)),HttpStatus.CONFLICT,"PROJECT_NOT_WRITABLE");
+        project.setStatus(ProjectStatus.IN_PROGRESS);task.setStatus(TaskStatus.CANCELLED);
+        error(() -> service.schedule(10L,20L,1L,new TaskScheduleRequest(null,null,0L)),HttpStatus.CONFLICT,"TASK_CANCELLED");
+    }
+
+    @Test void boardFlagsUseKoreanCalendarAndExcludeDoneAndCancelled() {
+        var today=LocalDate.of(2026,10,8);
+        task.setDueDate(today.minusDays(1));
+        assertThat(TaskResponse.from(task,List.of(),today,false).overdue()).isTrue();
+        task.setDueDate(today.plusDays(3));
+        assertThat(TaskResponse.from(task,List.of(),today,false).dueSoon()).isTrue();
+        task.setDueDate(today.plusDays(4));
+        assertThat(TaskResponse.from(task,List.of(),today,false).dueSoon()).isFalse();
+        task.setStatus(TaskStatus.DONE);
+        var done=TaskResponse.from(task,List.of(),today,false);
+        assertThat(done.overdue()).isFalse();assertThat(done.dueSoon()).isFalse();
+        assertThat(done.missingCompletionEvidence()).isTrue();assertThat(done.riskScore()).isNull();
+        assertThat(TaskResponse.from(task,List.of(),today,true).missingCompletionEvidence()).isFalse();
+        task.setStatus(TaskStatus.CANCELLED);
+        assertThat(TaskResponse.from(task,List.of(),today,false).missingCompletionEvidence()).isFalse();
     }
 
     private TaskRequest request(Integer order) { return new TaskRequest(" 수정 작업 ", TaskSize.XL, null, order); }

@@ -37,6 +37,16 @@ public class TaskRelationService {
         this.clock = clock;
     }
 
+    public record Dependency(long taskId, long prerequisiteTaskId) {}
+
+    @Transactional(readOnly = true)
+    public List<Dependency> dependencies(long projectId, long userId) {
+        access.project(projectId); access.approvedMember(projectId, userId);
+        return prerequisites.findByTask_Project_Id(projectId).stream()
+                .map(p -> new Dependency(p.getId().getTaskId(), p.getId().getPrerequisiteTaskId()))
+                .sorted(java.util.Comparator.comparingLong(Dependency::taskId).thenComparingLong(Dependency::prerequisiteTaskId)).toList();
+    }
+
     @Transactional(readOnly = true)
     public List<RelationResponses.Prerequisite> prerequisites(long projectId, long taskId, long userId) {
         readable(projectId, taskId, userId);

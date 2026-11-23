@@ -14,7 +14,13 @@ public record ProjectRequest(
         @NotNull @Schema(type = "string", example = "23:00:00") LocalTime checkinTime,
         @NotNull @Min(1) @Max(7) @Schema(example = "2") Integer checkinFrequency,
         @NotNull @Size(min = 1, max = 7) @Schema(description = "중복 없이 checkinFrequency 개의 요일")
-        List<@NotNull CheckinDay> checkinDays) {
+        List<@NotNull CheckinDay> checkinDays,
+        @Pattern(regexp = "presentation|report|development|design|research|other")
+        @Schema(description = "생략 시 생성은 other, 수정은 기존 유형 유지", example = "development") String projectType) {
+    public ProjectRequest(String title, String className, LocalDate deadline, LocalTime checkinTime,
+            Integer checkinFrequency, List<CheckinDay> checkinDays) {
+        this(title, className, deadline, checkinTime, checkinFrequency, checkinDays, null);
+    }
     public ProjectRequest {
         title = title == null ? null : title.strip();
         className = className == null ? null : className.strip();
